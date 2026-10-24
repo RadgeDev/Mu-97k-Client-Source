@@ -1211,6 +1211,8 @@ extern "C" {
     DWORD    g_MaxCharacterLevel  = 400;
     WORD     g_CharDeleteMaxLevel = 10;
     BYTE     g_CharCreationEnable = 1;
+    DWORD    g_CharacterReset     = 0;
+    DWORD    g_CharacterGrandReset = 0;
 }
 
 void    *DAT_07cf1ff4  = NULL;

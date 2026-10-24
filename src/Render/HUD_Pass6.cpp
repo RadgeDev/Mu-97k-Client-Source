@@ -820,6 +820,13 @@ extern "C" void __cdecl RenderCharacterInfoWindow(int iPosX, int iPosY)
     RenderText(iPosX + 22, iPosY + 22, pszText, 150 * (int)gWindow.GetWidth() / 0x280, 1, 0);
     glColor3f(1.0f, 1.0f, 1.0f);
 
+    // Reset and SReset - small discreet text below name
+    gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
+    m_dwBackColor = 0;
+    m_dwTextColor = 0xFF96DCFFu;
+    sprintf(Buffer, "Reset: %u / SReset: %u", (unsigned)g_CharacterReset, (unsigned)g_CharacterGrandReset);
+    RenderText(iPosX + 22, iPosY + 35, Buffer, 150 * (int)gWindow.GetWidth() / 0x280, 1, 0);
+
     // 5 stat-row backdrops (sprite 245) at y = (60-4)+i*60, x = (19-6)
     {
         float xb = (float)iPosX + 19.0f - 6.0f;

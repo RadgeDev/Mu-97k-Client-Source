@@ -41,6 +41,8 @@ void Recv_NewCharacterInfo(const BYTE* Msg, int Size)
     *(DWORD*)(CA + 0x10) = packet.Experience;
     *(DWORD*)(CA + 0x34) = packet.NextExperience;
     gMoveList.SetResets(packet.ViewReset);
+    g_CharacterReset = packet.ViewReset;
+    g_CharacterGrandReset = packet.ViewGrandReset;
     gHeroVitals.SetCurrent(VITAL_LIFE, packet.Life);
     gHeroVitals.SetMax(VITAL_LIFE, packet.MaxLife);
     gHeroVitals.SetCurrent(VITAL_MANA, packet.Mana);
@@ -148,6 +150,8 @@ short s_PendingHeroGuildMarkRow = -1;
 // ---------------------------------------------------------------------------
 void Recv_CharList(const BYTE* Msg, int Size)
 {
+    g_CharacterReset = 0;
+    g_CharacterGrandReset = 0;
     // DESVIACION (DLL Reconnect.cpp): durante la reconexión se entra directo
     // con el mismo personaje, sin pasar por char-select.
     if (gReconnect.OnCharacterList()) return;

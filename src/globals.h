@@ -1418,6 +1418,8 @@ extern "C" {
     extern DWORD g_MaxCharacterLevel;     // 0xDF — cap de level (default 400)
     extern WORD  g_CharDeleteMaxLevel;    // 0xDD — max level que permite delete
     extern BYTE  g_CharCreationEnable;    // 0xDE — permite crear chars
+    extern DWORD g_CharacterReset;        // 0xF3:0xE0 - Reset
+    extern DWORD g_CharacterGrandReset;   // 0xF3:0xE0 - SReset
 }
 extern int     DAT_07e11d9c;           // system message count (max 5, i.e. 6 entries 0..5)
 // Player chat / notification buffer (UIChatLogWindow_AddText / UI_DrawPlayerList)
