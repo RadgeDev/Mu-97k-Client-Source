@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Platform/Text.h"
 #include "UI/JewelBank.h"
 #include "UI/UIState.h"
@@ -160,6 +160,21 @@ extern "C" void __cdecl JewelBank_Close(void)
     gNetwork.SendC1(pkt, sizeof(pkt));
 }
 
+extern "C" void __cdecl JewelBank_Open(void)
+{
+    BYTE pkt[4] = { 0xC1, 0x04, 0xF8, 0x20 };
+    gNetwork.SendC1(pkt, sizeof(pkt));
+}
+
+extern "C" void __cdecl JewelBank_Toggle(void)
+{
+    if (g_bJewelBankWindowOpen) {
+        JewelBank_Close();
+    } else {
+        JewelBank_Open();
+    }
+}
+
 extern "C" void __cdecl JewelBank_ResetCharacter(void)
 {
     g_bJewelBankWindowOpen = false;
@@ -246,12 +261,28 @@ struct JewelBankDef {
 };
 
 static const JewelBankDef s_Jewels[5] = {
-    { 2, "Jewel of Chaos",    399, &s_JewelBankChaos,    255, 205, 30  }, // 🟡 Yellow/Gold
-    { 0, "Jewel of Bless",    461, &s_JewelBankBless,    200, 110, 255 }, // 🟣 Purple
-    { 1, "Jewel of Soul",     462, &s_JewelBankSoul,     255, 75,  75  }, // 🔴 Red
-    { 3, "Jewel of Life",     464, &s_JewelBankLife,     210, 130, 50  }, // 🟫 Brown/Amber
-    { 4, "Jewel of Creation", 470, &s_JewelBankCreation, 195, 150, 85  }, // 🟫 Warm Gold/Brown
+    { 2, "Jewel of Chaos",    399, &s_JewelBankChaos,    255, 205, 30  }, // ?? Yellow/Gold
+    { 0, "Jewel of Bless",    461, &s_JewelBankBless,    200, 110, 255 }, // ?? Purple
+    { 1, "Jewel of Soul",     462, &s_JewelBankSoul,     255, 75,  75  }, // ?? Red
+    { 3, "Jewel of Life",     464, &s_JewelBankLife,     210, 130, 50  }, // ?? Brown/Amber
+    { 4, "Jewel of Creation", 470, &s_JewelBankCreation, 195, 150, 85  }, // ?? Warm Gold/Brown
 };
+
+extern "C" void __cdecl RenderJewelBankItems3D(void)
+{
+    if (!g_bJewelBankWindowOpen) return;
+
+    int rowY = kStartY + 41;
+    for (int i = 0; i < 5; ++i)
+    {
+        float itemX = (float)(kStartX + 12);
+        float itemY = (float)(rowY + 6);
+
+        RenderItem3D(itemX, itemY, 20.0f, 20.0f, s_Jewels[i].itemIndex, 0, 0, 0, false);
+
+        rowY += 35;
+    }
+}
 
 extern "C" void __cdecl RenderJewelBankWindow(void)
 {
@@ -299,20 +330,17 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
         int invCount = GetItemCount(s_Jewels[i].itemIndex, -1);
         DWORD bankBal = *s_Jewels[i].pBalance;
 
-        // 1. Jewel pip (colored gem pip)
+        // 1. Native inventory slot background for 3D Jewel
         GL_ResetState();
-        glColor4ub(s_Jewels[i].r, s_Jewels[i].g, s_Jewels[i].b, 255);
-        GL_DrawRect((float)(kStartX + 14), (float)(rowY + 6), 6.0f, 6.0f);
-        // Pip specular highlight
-        glColor4ub(255, 255, 255, 200);
-        GL_DrawRect((float)(kStartX + 15), (float)(rowY + 7), 2.0f, 2.0f);
+        glColor4f(0.85f, 0.88f, 0.95f, 1.0f);
+        GL_DrawTexture(277, (float)(kStartX + 12), (float)(rowY + 6), 20.0f, 20.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 1);
         EnableAlphaTest(true);
 
         // 2. Jewel Name (Line 1, Left)
         m_dwBackColor = Color4b(255, 255, 255, 0);
         m_dwTextColor = (DWORD)Color4b(240, 240, 245, 255);
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
-        RenderText(kStartX + 24, rowY + 3, (char*)s_Jewels[i].name, RealWidth(102), 0, nullptr);
+        RenderText(kStartX + 36, rowY + 3, (char*)s_Jewels[i].name, RealWidth(92), 0, nullptr);
 
         // 3. Action Buttons on Line 1, Right: [+] and [-]
         float btnDepositX  = (float)(kStartX + 130);
@@ -333,7 +361,14 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
         } else {
             m_dwTextColor = (DWORD)Color4b(140, 150, 165, 255);
         }
-        RenderText(kStartX + 24, rowY + 18, countBuf, RealWidth(155), 0, nullptr);
+        RenderText(kStartX + 36, rowY + 18, countBuf, RealWidth(145), 0, nullptr);
+
+        // Jewel Slot Hover Tooltip
+        if (IsWorkZone(kStartX + 12, rowY + 6, 20, 20)) {
+            Platform::TextCopySecure(tipBuf, sizeof(tipBuf), s_Jewels[i].name, Platform::TruncateText);
+            tipX = kStartX + 38;
+            tipY = rowY + 20;
+        }
 
         // Check hover for tooltips
         if (IsWorkZone((int)btnDepositX, (int)btnY, (int)btnW, (int)btnH)) {
@@ -472,3 +507,4 @@ extern "C" void __cdecl CheckJewelBankWindow(void)
         JewelBank_Close();
     }
 }
+

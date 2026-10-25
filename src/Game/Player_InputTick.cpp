@@ -7,6 +7,7 @@
 #include "UI/MiniMap.h"
 #include "UI/EventTimer.h"
 #include "UI/MoveList.h"
+#include "UI/JewelBank.h"
 #include "globals.h"
 #include "functions.h"
 #include "Net/Net.h"
@@ -452,6 +453,7 @@ static void HUD_HotkeyTick(void)
     int kP = PressKey(0x50); // 'P'  Party
     int kH = PressKey('H');
     int kM = PressKey('M');
+    int kJ = PressKey('J');
     int kTab = PressKey(VK_TAB);
     int kSpace = PressKey(VK_SPACE);
     int kF10 = PressKey(VK_F10);
@@ -487,6 +489,7 @@ static void HUD_HotkeyTick(void)
     if (kH) gEventTimer.Toggle();
     // DESVIACION (DLL Controller.cpp): menú M con destinos recibidos del server.
     if (kM) gMoveList.Toggle();
+    if (kJ) JewelBank_Toggle();
     // DESVIACION (DLL Controller.cpp): Tab abre el mapa.
     if (kTab) gMiniMap.Toggle();
     // DESVIACION (MU 5.2): Espacio levanta el primer ítem cercano.
@@ -1667,3 +1670,4 @@ end_tick:
         }
     }
 }
+

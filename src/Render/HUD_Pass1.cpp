@@ -453,6 +453,10 @@ void Render_HotbarItems3D_(void)
     // con a3 = 1 desde sub_403320) pero nunca su modelo.
     if (g_csQuest) FUN_00403150((void*)(uintptr_t)g_csQuest, 0, 1, 0);
 
+    if (g_bJewelBankWindowOpen) {
+        RenderJewelBankItems3D();
+    }
+
     if (!HUD_IsGoldenArcherPanelRuntime() && !g_bJewelBankWindowOpen) {
         FUN_004f5ce0(0, 0, 0, 0);
         if (DAT_07e91388 > 0 && !DAT_07eaa13c) {
@@ -496,3 +500,4 @@ void Render_HotbarItems3D_(void)
 }
 
 void Render_HotbarItems3D(void) { Render_HotbarItems3D_(); }
+
