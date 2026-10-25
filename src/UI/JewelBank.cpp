@@ -73,13 +73,13 @@ static void RenderButton(float x, float y, float w, float h, const char* text, b
 {
     GL_ResetState();
     if (!enabled) {
-        glColor3f(0.30f, 0.30f, 0.30f);
+        glColor3f(0.28f, 0.28f, 0.30f);
         GL_DrawTexture(240, x, y, w, h, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
     } else {
         glColor3f(1.0f, 1.0f, 1.0f);
         GL_DrawTexture(240, x, y, w, h, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
         if (IsWorkZone((int)x, (int)y, (int)w, (int)h) || highlight) {
-            glColor3f(0.85f, 0.65f, 0.25f);
+            glColor3f(0.90f, 0.70f, 0.25f);
             GL_SetBlendAdditive();
             GL_DrawTexture(240, x, y, w, h, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
             glColor3f(1.0f, 1.0f, 1.0f);
@@ -88,73 +88,10 @@ static void RenderButton(float x, float y, float w, float h, const char* text, b
     }
     EnableAlphaTest(true);
     m_dwBackColor = Color4b(255, 255, 255, 0);
-    m_dwTextColor = enabled ? (DWORD)Color4b(245, 245, 245, 255) : (DWORD)Color4b(120, 120, 120, 255);
+    m_dwTextColor = enabled ? (DWORD)Color4b(245, 245, 245, 255) : (DWORD)Color4b(115, 115, 120, 255);
     gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
     RenderText((int)x, CenterTextPosY(text, (int)(y + h / 2.0f)), (char*)text, RealWidth((int)w), 1, nullptr);
     glColor3f(1.0f, 1.0f, 1.0f);
-}
-
-static void RenderArrowButton(float x, float y, float w, float h, bool isUp, bool enabled)
-{
-    GL_ResetState();
-    bool hovered = IsWorkZone((int)x, (int)y, (int)w, (int)h);
-
-    // Button body
-    if (!enabled) {
-        glColor4f(0.12f, 0.12f, 0.14f, 0.70f);
-        GL_DrawRect(x, y, w, h);
-        glColor4f(0.25f, 0.25f, 0.28f, 0.50f);
-    } else if (hovered) {
-        glColor4f(0.22f, 0.25f, 0.32f, 0.95f);
-        GL_DrawRect(x, y, w, h);
-        glColor4f(0.90f, 0.75f, 0.30f, 0.90f);
-    } else {
-        glColor4f(0.16f, 0.17f, 0.20f, 0.90f);
-        GL_DrawRect(x, y, w, h);
-        glColor4f(0.40f, 0.45f, 0.55f, 0.60f);
-    }
-
-    // 1px Border
-    GL_DrawRect(x, y, w, 1.0f);
-    GL_DrawRect(x, y + h - 1.0f, w, 1.0f);
-    GL_DrawRect(x, y, 1.0f, h);
-    GL_DrawRect(x + w - 1.0f, y, 1.0f, h);
-
-    // Vector Triangle Icon
-    float cx = x + w * 0.5f;
-    float cy = y + h * 0.5f;
-
-    glDisable(GL_TEXTURE_2D);
-    glBegin(GL_TRIANGLES);
-    if (!enabled) {
-        glColor4f(0.35f, 0.35f, 0.38f, 0.60f);
-    } else if (hovered) {
-        if (isUp) {
-            glColor4f(0.40f, 1.00f, 0.50f, 1.0f); // Bright Green
-        } else {
-            glColor4f(1.00f, 0.75f, 0.30f, 1.0f); // Bright Gold/Orange
-        }
-    } else {
-        if (isUp) {
-            glColor4f(0.30f, 0.85f, 0.40f, 0.9f); // Green
-        } else {
-            glColor4f(0.90f, 0.60f, 0.25f, 0.9f); // Gold/Orange
-        }
-    }
-
-    if (isUp) {
-        glVertex2f(cx, cy - 3.5f);
-        glVertex2f(cx - 3.5f, cy + 2.5f);
-        glVertex2f(cx + 3.5f, cy + 2.5f);
-    } else {
-        glVertex2f(cx - 3.5f, cy - 2.5f);
-        glVertex2f(cx + 3.5f, cy - 2.5f);
-        glVertex2f(cx, cy + 3.5f);
-    }
-    glEnd();
-    glEnable(GL_TEXTURE_2D);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    EnableAlphaTest(true);
 }
 
 #pragma pack(push, 1)
@@ -164,7 +101,7 @@ struct PMSG_JEWEL_BANK_ACTION_SEND
     BYTE size;      // 10
     BYTE head;      // 0xF8
     BYTE subh;      // 0x21
-    BYTE Action;    // 1=Deposit, 2=Withdraw
+    BYTE Action;    // 1=Deposit, 2=Withdraw, 3=Deposit All
     BYTE JewelType; // 0..4
     DWORD Count;    // count
 };
@@ -271,7 +208,7 @@ extern "C" void __cdecl JewelBank_Recv(BYTE* Msg, int Size)
 // 2. Jewel of Bless
 // 3. Jewel of Soul
 // 4. Jewel of Life
-// 5. Creation
+// 5. Jewel of Creation
 struct JewelBankDef {
     BYTE type;
     const char* name;
@@ -281,11 +218,11 @@ struct JewelBankDef {
 };
 
 static const JewelBankDef s_Jewels[5] = {
-    { 2, "Jewel of Chaos", 399, &s_JewelBankChaos,    255, 205, 30  }, // 🟡 Yellow/Gold
-    { 0, "Jewel of Bless", 461, &s_JewelBankBless,    200, 110, 255 }, // 🟣 Purple
-    { 1, "Jewel of Soul",  462, &s_JewelBankSoul,     255, 75,  75  }, // 🔴 Red
-    { 3, "Jewel of Life",  464, &s_JewelBankLife,     210, 130, 50  }, // 🟫 Brown/Amber
-    { 4, "Creation",       470, &s_JewelBankCreation, 195, 150, 85  }, // 🟫 Warm Gold/Brown
+    { 2, "Jewel of Chaos",    399, &s_JewelBankChaos,    255, 205, 30  }, // 🟡 Yellow/Gold
+    { 0, "Jewel of Bless",    461, &s_JewelBankBless,    200, 110, 255 }, // 🟣 Purple
+    { 1, "Jewel of Soul",     462, &s_JewelBankSoul,     255, 75,  75  }, // 🔴 Red
+    { 3, "Jewel of Life",     464, &s_JewelBankLife,     210, 130, 50  }, // 🟫 Brown/Amber
+    { 4, "Jewel of Creation", 470, &s_JewelBankCreation, 195, 150, 85  }, // 🟫 Warm Gold/Brown
 };
 
 extern "C" void __cdecl RenderJewelBankWindow(void)
@@ -301,7 +238,7 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
     // Dark slate background for clean table zone
     GL_ResetState();
     glColor4f(0.06f, 0.07f, 0.09f, 0.92f);
-    GL_DrawTexture(240, (float)kStartX + 10, (float)kStartY + 38, 170.0f, 260.0f, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
+    GL_DrawTexture(240, (float)kStartX + 10, (float)kStartY + 36, 170.0f, 260.0f, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
     glColor3f(1.0f, 1.0f, 1.0f);
     EnableAlphaTest(true);
 
@@ -313,30 +250,22 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
     RenderText(kStartX + 15, CenterTextPosY("Banco de Joyas", y), (char*)"Banco de Joyas", RealWidth(160), 1, nullptr);
 
     // Subtitle: "Deposito de joyas"
-    y = kStartY + 26;
+    y = kStartY + 25;
     m_dwBackColor = Color4b(255, 255, 255, 0);
     m_dwTextColor = (DWORD)Color4b(180, 220, 255, 255);
     gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
     RenderText(kStartX + 15, CenterTextPosY("Deposito de joyas", y), (char*)"Deposito de joyas", RealWidth(160), 1, nullptr);
 
-    // Column Labels: Joya | Banco/Inv | Accion
-    y = kStartY + 39;
-    gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
-    m_dwTextColor = (DWORD)Color4b(130, 145, 165, 255);
-    RenderText(kStartX + 25, y, (char*)"Joya", RealWidth(50), 0, nullptr);
-    RenderText(kStartX + 96, y, (char*)"Banco/Inv", RealWidth(42), 1, nullptr);
-    RenderText(kStartX + 140, y, (char*)"Accion", RealWidth(42), 1, nullptr);
-
     // Top table separator line ====================
     GL_ResetState();
     glColor4f(0.50f, 0.55f, 0.65f, 0.85f);
-    GL_DrawRect((float)(kStartX + 12), (float)(kStartY + 51), 166.0f, 1.5f);
+    GL_DrawRect((float)(kStartX + 12), (float)(kStartY + 38), 166.0f, 1.5f);
     EnableAlphaTest(true);
 
     char tipBuf[64] = { 0 };
     int tipX = 0, tipY = 0;
 
-    int rowY = kStartY + 54;
+    int rowY = kStartY + 41;
     for (int i = 0; i < 5; ++i)
     {
         int invCount = GetItemCount(s_Jewels[i].itemIndex, -1);
@@ -345,56 +274,59 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
         // 1. Jewel pip (colored gem pip)
         GL_ResetState();
         glColor4ub(s_Jewels[i].r, s_Jewels[i].g, s_Jewels[i].b, 255);
-        GL_DrawRect((float)(kStartX + 15), (float)(rowY + 9), 6.0f, 6.0f);
+        GL_DrawRect((float)(kStartX + 14), (float)(rowY + 6), 6.0f, 6.0f);
         // Pip specular highlight
         glColor4ub(255, 255, 255, 200);
-        GL_DrawRect((float)(kStartX + 16), (float)(rowY + 10), 2.0f, 2.0f);
+        GL_DrawRect((float)(kStartX + 15), (float)(rowY + 7), 2.0f, 2.0f);
         EnableAlphaTest(true);
 
-        // 2. Jewel Name
+        // 2. Jewel Name (Full name, Line 1)
         m_dwBackColor = Color4b(255, 255, 255, 0);
-        m_dwTextColor = (DWORD)Color4b(235, 235, 240, 255);
+        m_dwTextColor = (DWORD)Color4b(240, 240, 245, 255);
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
-        RenderText(kStartX + 25, rowY + 6, (char*)s_Jewels[i].name, RealWidth(72), 0, nullptr);
+        RenderText(kStartX + 24, rowY + 3, (char*)s_Jewels[i].name, RealWidth(150), 0, nullptr);
 
-        // 3. Count: "0/0" (Banco/Inv)
-        char countBuf[32];
-        Platform::TextFormatSecure(countBuf, "%u/%d", bankBal, invCount);
+        // 3. Counter: "Banco: %u  |  Inv: %d" (Line 2)
+        char countBuf[48];
+        Platform::TextFormatSecure(countBuf, "Banco: %u  |  Inv: %d", bankBal, invCount);
+        gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
         if (bankBal > 0 || invCount > 0) {
             m_dwTextColor = (DWORD)Color4b(255, 225, 120, 255);
         } else {
-            m_dwTextColor = (DWORD)Color4b(145, 155, 170, 255);
+            m_dwTextColor = (DWORD)Color4b(140, 150, 165, 255);
         }
-        RenderText(kStartX + 96, rowY + 6, countBuf, RealWidth(42), 1, nullptr);
+        RenderText(kStartX + 24, rowY + 17, countBuf, RealWidth(100), 0, nullptr);
 
-        // 4. Action Buttons: [ ▲ ] and [ ▼ ]
-        float btnDepositX = (float)(kStartX + 140);
-        float btnWithdrawX = (float)(kStartX + 162);
-        float btnY = (float)(rowY + 6);
+        // 4. Action Buttons on the right: [+] and [-]
+        float btnDepositX  = (float)(kStartX + 128);
+        float btnWithdrawX = (float)(kStartX + 154);
+        float btnY         = (float)(rowY + 14);
+        float btnW         = 24.0f;
+        float btnH         = 17.0f;
 
-        RenderArrowButton(btnDepositX, btnY, 19.0f, 18.0f, true, invCount >= 1);
-        RenderArrowButton(btnWithdrawX, btnY, 19.0f, 18.0f, false, bankBal >= 1);
+        RenderButton(btnDepositX, btnY, btnW, btnH, "+", invCount >= 1);
+        RenderButton(btnWithdrawX, btnY, btnW, btnH, "-", bankBal >= 1);
 
         // Check hover for tooltips
-        if (IsWorkZone((int)btnDepositX, (int)btnY, 19, 18)) {
+        if (IsWorkZone((int)btnDepositX, (int)btnY, (int)btnW, (int)btnH)) {
             Platform::TextCopySecure(tipBuf, sizeof(tipBuf), "Depositar 1 (Shift: Todo)", Platform::TruncateText);
-            tipX = kStartX + 50;
-            tipY = rowY - 12;
-        } else if (IsWorkZone((int)btnWithdrawX, (int)btnY, 19, 18)) {
+            tipX = kStartX + 45;
+            tipY = rowY - 10;
+        } else if (IsWorkZone((int)btnWithdrawX, (int)btnY, (int)btnW, (int)btnH)) {
             Platform::TextCopySecure(tipBuf, sizeof(tipBuf), "Retirar 1 (Shift: 10)", Platform::TruncateText);
-            tipX = kStartX + 70;
-            tipY = rowY - 12;
+            tipX = kStartX + 65;
+            tipY = rowY - 10;
         }
 
         // Horizontal row divider line --------------------
         GL_ResetState();
         if (i < 4) {
             glColor4f(0.25f, 0.28f, 0.35f, 0.60f);
-            GL_DrawRect((float)(kStartX + 14), (float)(rowY + 31), 162.0f, 1.0f);
+            GL_DrawRect((float)(kStartX + 14), (float)(rowY + 34), 162.0f, 1.0f);
         }
         EnableAlphaTest(true);
 
-        rowY += 32;
+        rowY += 35;
     }
 
     // Bottom table separator line ====================
@@ -404,7 +336,7 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
     EnableAlphaTest(true);
 
     // Status Message Box
-    int sy = rowY + 7;
+    int sy = rowY + 6;
     GL_ResetState();
     glColor3f(0.10f, 0.11f, 0.14f);
     GL_DrawTexture(240, (float)kStartX + 12, (float)sy, 166.0f, 24.0f, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
@@ -448,19 +380,21 @@ extern "C" void __cdecl CheckJewelBankWindow(void)
         UIState::CaptureMouseForUI();
     }
 
-    int rowY = kStartY + 54;
+    int rowY = kStartY + 41;
     for (BYTE i = 0; i < 5; ++i)
     {
         int invCount = GetItemCount(s_Jewels[i].itemIndex, -1);
         DWORD bal = *s_Jewels[i].pBalance;
         BYTE jType = s_Jewels[i].type;
 
-        float btnDepositX = (float)(kStartX + 140);
-        float btnWithdrawX = (float)(kStartX + 162);
-        float btnY = (float)(rowY + 6);
+        float btnDepositX  = (float)(kStartX + 128);
+        float btnWithdrawX = (float)(kStartX + 154);
+        float btnY         = (float)(rowY + 14);
+        float btnW         = 24.0f;
+        float btnH         = 17.0f;
 
-        // [ ▲ ] Deposit
-        if (IsWorkZone((int)btnDepositX, (int)btnY, 19, 18) && ConsumeClick()) {
+        // [+] Deposit
+        if (IsWorkZone((int)btnDepositX, (int)btnY, (int)btnW, (int)btnH) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (invCount >= 1) {
                 bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
@@ -472,8 +406,8 @@ extern "C" void __cdecl CheckJewelBankWindow(void)
             }
         }
 
-        // [ ▼ ] Withdraw
-        if (IsWorkZone((int)btnWithdrawX, (int)btnY, 19, 18) && ConsumeClick()) {
+        // [-] Withdraw
+        if (IsWorkZone((int)btnWithdrawX, (int)btnY, (int)btnW, (int)btnH) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (bal >= 1) {
                 bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
@@ -485,27 +419,16 @@ extern "C" void __cdecl CheckJewelBankWindow(void)
             }
         }
 
-        rowY += 32;
+        rowY += 35;
     }
 
-    int sy = rowY + 7;
+    int sy = rowY + 6;
 
     // Bottom Action Button 1: "Depositar Todo"
     if (IsWorkZone(kStartX + 20, sy + 30, 150, 24) && ConsumeClick()) {
         PlayBuffer(25, 0, 0);
-        bool depositedAny = false;
-        for (int i = 0; i < 5; ++i) {
-            int count = GetItemCount(s_Jewels[i].itemIndex, -1);
-            if (count > 0) {
-                SendJewelBankAction(1, s_Jewels[i].type, 0xFFFFFFFF);
-                depositedAny = true;
-                break;
-            }
-        }
-        if (!depositedAny) {
-            Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "No tienes joyas para depositar.", Platform::TruncateText);
-            s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
-        }
+        // Action 3 = Deposit All jewels in one atomic server pass!
+        SendJewelBankAction(3, 0, 0);
     }
 
     // Bottom Action Button 2: "Cerrar"
