@@ -308,32 +308,32 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
         GL_DrawRect((float)(kStartX + 15), (float)(rowY + 7), 2.0f, 2.0f);
         EnableAlphaTest(true);
 
-        // 2. Jewel Name (Full name, Line 1)
+        // 2. Jewel Name (Line 1, Left)
         m_dwBackColor = Color4b(255, 255, 255, 0);
         m_dwTextColor = (DWORD)Color4b(240, 240, 245, 255);
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
-        RenderText(kStartX + 24, rowY + 3, (char*)s_Jewels[i].name, RealWidth(150), 0, nullptr);
+        RenderText(kStartX + 24, rowY + 3, (char*)s_Jewels[i].name, RealWidth(102), 0, nullptr);
 
-        // 3. Counter: "Banco: %u  |  Inv: %d" (Line 2)
-        char countBuf[48];
-        Platform::TextFormatSecure(countBuf, "Banco: %u  |  Inv: %d", bankBal, invCount);
+        // 3. Action Buttons on Line 1, Right: [+] and [-]
+        float btnDepositX  = (float)(kStartX + 130);
+        float btnWithdrawX = (float)(kStartX + 156);
+        float btnY         = (float)(rowY + 2);
+        float btnW         = 23.0f;
+        float btnH         = 16.0f;
+
+        RenderButton(btnDepositX, btnY, btnW, btnH, "+", invCount >= 1);
+        RenderButton(btnWithdrawX, btnY, btnW, btnH, "-", bankBal >= 1);
+
+        // 4. Counter: "Banco: %u  |  Inventario: %d" (Line 2, Full width)
+        char countBuf[64];
+        Platform::TextFormatSecure(countBuf, "Banco: %u  |  Inventario: %d", bankBal, invCount);
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
         if (bankBal > 0 || invCount > 0) {
             m_dwTextColor = (DWORD)Color4b(255, 225, 120, 255);
         } else {
             m_dwTextColor = (DWORD)Color4b(140, 150, 165, 255);
         }
-        RenderText(kStartX + 24, rowY + 17, countBuf, RealWidth(100), 0, nullptr);
-
-        // 4. Action Buttons on the right: [+] and [-]
-        float btnDepositX  = (float)(kStartX + 128);
-        float btnWithdrawX = (float)(kStartX + 154);
-        float btnY         = (float)(rowY + 14);
-        float btnW         = 24.0f;
-        float btnH         = 17.0f;
-
-        RenderButton(btnDepositX, btnY, btnW, btnH, "+", invCount >= 1);
-        RenderButton(btnWithdrawX, btnY, btnW, btnH, "-", bankBal >= 1);
+        RenderText(kStartX + 24, rowY + 18, countBuf, RealWidth(155), 0, nullptr);
 
         // Check hover for tooltips
         if (IsWorkZone((int)btnDepositX, (int)btnY, (int)btnW, (int)btnH)) {
@@ -415,11 +415,11 @@ extern "C" void __cdecl CheckJewelBankWindow(void)
         DWORD bal = *s_Jewels[i].pBalance;
         BYTE jType = s_Jewels[i].type;
 
-        float btnDepositX  = (float)(kStartX + 128);
-        float btnWithdrawX = (float)(kStartX + 154);
-        float btnY         = (float)(rowY + 14);
-        float btnW         = 24.0f;
-        float btnH         = 17.0f;
+        float btnDepositX  = (float)(kStartX + 130);
+        float btnWithdrawX = (float)(kStartX + 156);
+        float btnY         = (float)(rowY + 2);
+        float btnW         = 23.0f;
+        float btnH         = 16.0f;
 
         // [+] Deposit
         if (IsWorkZone((int)btnDepositX, (int)btnY, (int)btnW, (int)btnH) && ConsumeClick()) {
