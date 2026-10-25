@@ -13,7 +13,7 @@ obj/
 /build-*/
 /out/
 
-bin/Client/main.exe
+bin/Client/*.exe
 bin/Client/mu-linux.sh
 bin/Client/main.pdb
 bin/Client/main.map
