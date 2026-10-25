@@ -105,6 +105,36 @@ struct PMSG_JEWEL_BANK_ACTION_SEND
     BYTE JewelType; // 0..4
     DWORD Count;    // count
 };
+
+struct PMSG_JEWEL_BANK_INFO_RECV
+{
+    BYTE type;      // 0xC1
+    BYTE size;      // 24
+    BYTE head;      // 0xF8
+    BYTE subh;      // 0x20
+    DWORD Bless;
+    DWORD Soul;
+    DWORD Chaos;
+    DWORD Life;
+    DWORD Creation;
+};
+
+struct PMSG_JEWEL_BANK_RESULT_RECV
+{
+    BYTE type;      // 0xC1
+    BYTE size;      // 31
+    BYTE head;      // 0xF8
+    BYTE subh;      // 0x22
+    BYTE Result;
+    BYTE Action;
+    BYTE JewelType;
+    DWORD Count;
+    DWORD Bless;
+    DWORD Soul;
+    DWORD Chaos;
+    DWORD Life;
+    DWORD Creation;
+};
 #pragma pack(pop)
 
 static void SendJewelBankAction(BYTE action, BYTE jewelType, DWORD count)
@@ -153,12 +183,13 @@ extern "C" void __cdecl JewelBank_Recv(BYTE* Msg, int Size)
 
     if (subh == 0x20) // Open / Info
     {
-        if (Size >= 24) {
-            s_JewelBankBless    = *(DWORD*)(Msg + 4);
-            s_JewelBankSoul     = *(DWORD*)(Msg + 8);
-            s_JewelBankChaos    = *(DWORD*)(Msg + 12);
-            s_JewelBankLife     = *(DWORD*)(Msg + 16);
-            s_JewelBankCreation = *(DWORD*)(Msg + 20);
+        if (Size >= (int)sizeof(PMSG_JEWEL_BANK_INFO_RECV)) {
+            PMSG_JEWEL_BANK_INFO_RECV* p = (PMSG_JEWEL_BANK_INFO_RECV*)Msg;
+            s_JewelBankBless    = p->Bless;
+            s_JewelBankSoul     = p->Soul;
+            s_JewelBankChaos    = p->Chaos;
+            s_JewelBankLife     = p->Life;
+            s_JewelBankCreation = p->Creation;
             g_bJewelBankWindowOpen = true;
             InventoryOpened = 0;
             CloseInventoryRelatedWindows();
@@ -168,31 +199,28 @@ extern "C" void __cdecl JewelBank_Recv(BYTE* Msg, int Size)
     }
     else if (subh == 0x22) // Result update
     {
-        if (Size >= 31) {
-            BYTE result = Msg[4];
-            BYTE action = Msg[5];
-            BYTE jewel  = Msg[6];
-            DWORD count = *(DWORD*)(Msg + 7);
-            s_JewelBankBless    = *(DWORD*)(Msg + 11);
-            s_JewelBankSoul     = *(DWORD*)(Msg + 15);
-            s_JewelBankChaos    = *(DWORD*)(Msg + 19);
-            s_JewelBankLife     = *(DWORD*)(Msg + 23);
-            s_JewelBankCreation = *(DWORD*)(Msg + 27);
+        if (Size >= (int)sizeof(PMSG_JEWEL_BANK_RESULT_RECV)) {
+            PMSG_JEWEL_BANK_RESULT_RECV* p = (PMSG_JEWEL_BANK_RESULT_RECV*)Msg;
+            s_JewelBankBless    = p->Bless;
+            s_JewelBankSoul     = p->Soul;
+            s_JewelBankChaos    = p->Chaos;
+            s_JewelBankLife     = p->Life;
+            s_JewelBankCreation = p->Creation;
 
-            if (result == 0) {
-                if (action == 1) {
-                    Platform::TextFormatSecure(s_JewelBankStatus, "Depositadas +%u joya(s) con exito", count);
+            if (p->Result == 0) {
+                if (p->Action == 1 || p->Action == 3) {
+                    Platform::TextFormatSecure(s_JewelBankStatus, "Depositadas +%u joya(s) con exito", p->Count);
                 } else {
-                    Platform::TextFormatSecure(s_JewelBankStatus, "Retiradas +%u joya(s) al inventario", count);
+                    Platform::TextFormatSecure(s_JewelBankStatus, "Retiradas +%u joya(s) al inventario", p->Count);
                 }
                 s_StatusColor = (DWORD)Color4b(100, 255, 120, 255);
-            } else if (result == 1) {
+            } else if (p->Result == 1) {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Saldo insuficiente en el banco.", Platform::TruncateText);
                 s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
-            } else if (result == 2) {
+            } else if (p->Result == 2) {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Inventario lleno: sin espacio libre.", Platform::TruncateText);
                 s_StatusColor = (DWORD)Color4b(255, 170, 50, 255);
-            } else if (result == 4) {
+            } else if (p->Result == 4) {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Operacion en curso... espera.", Platform::TruncateText);
                 s_StatusColor = (DWORD)Color4b(255, 255, 100, 255);
             } else {
