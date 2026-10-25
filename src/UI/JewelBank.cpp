@@ -18,9 +18,9 @@ int __cdecl GetItemCount(int siType, int iLevel);
 bool g_bJewelBankWindowOpen = false;
 
 static DWORD s_JewelBankBless = 0;
-static DWORD s_JewelBankSoul = 0;
+static DWORD s_JewelBankSoul  = 0;
 static DWORD s_JewelBankChaos = 0;
-static DWORD s_JewelBankLife = 0;
+static DWORD s_JewelBankLife  = 0;
 static char s_JewelBankStatus[64] = { 0 };
 static DWORD s_StatusColor = 0;
 
@@ -43,7 +43,7 @@ static int RealWidth(int w)
 
 static bool IsWorkZone(int x, int y, int w, int h)
 {
-    return JB_MouseX >= x && JB_MouseX <= x + w && JB_MouseY >= y && JB_MouseY <= y + h;
+    return JB_MouseX >= x && JB_MouseX <= (x + w) && JB_MouseY >= y && JB_MouseY <= (y + h);
 }
 
 static int CenterTextPosY(const char* text, int y)
@@ -65,17 +65,17 @@ static bool ConsumeClick(void)
     return false;
 }
 
-static void RenderButton(float x, float y, float w, float h, const char* text, bool enabled = true)
+static void RenderButton(float x, float y, float w, float h, const char* text, bool enabled = true, bool highlight = false)
 {
     GL_ResetState();
     if (!enabled) {
-        glColor3f(0.35f, 0.35f, 0.35f);
+        glColor3f(0.30f, 0.30f, 0.30f);
         GL_DrawTexture(240, x, y, w, h, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
     } else {
         glColor3f(1.0f, 1.0f, 1.0f);
         GL_DrawTexture(240, x, y, w, h, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
-        if (IsWorkZone((int)x, (int)y, (int)w, (int)h)) {
-            glColor3f(0.85f, 0.65f, 0.3f);
+        if (IsWorkZone((int)x, (int)y, (int)w, (int)h) || highlight) {
+            glColor3f(0.85f, 0.65f, 0.25f);
             GL_SetBlendAdditive();
             GL_DrawTexture(240, x, y, w, h, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
             glColor3f(1.0f, 1.0f, 1.0f);
@@ -84,9 +84,9 @@ static void RenderButton(float x, float y, float w, float h, const char* text, b
     }
     EnableAlphaTest(true);
     m_dwBackColor = Color4b(255, 255, 255, 0);
-    m_dwTextColor = enabled ? Color4b(240, 240, 240, 255) : Color4b(130, 130, 130, 255);
-    gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
-    RenderText((int)x, CenterTextPosY(text, (int)(y + h / 2)), (char*)text, RealWidth((int)w), 1, nullptr);
+    m_dwTextColor = enabled ? (DWORD)Color4b(245, 245, 245, 255) : (DWORD)Color4b(120, 120, 120, 255);
+    gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
+    RenderText((int)x, CenterTextPosY(text, (int)(y + h / 2.0f)), (char*)text, RealWidth((int)w), 1, nullptr);
     glColor3f(1.0f, 1.0f, 1.0f);
 }
 
@@ -116,18 +116,17 @@ static void SendJewelBankAction(BYTE action, BYTE jewelType, DWORD count)
     gNetwork.SendC1((BYTE*)&pkt, sizeof(pkt));
 }
 
-void JewelBank_Close(void)
+extern "C" void __cdecl JewelBank_Close(void)
 {
     g_bJewelBankWindowOpen = false;
     InventoryOpened = 0;
     CloseInventoryRelatedWindows();
 
-    // Send close packet 0xF8, 0x23 to server
     BYTE pkt[4] = { 0xC1, 0x04, 0xF8, 0x23 };
     gNetwork.SendC1(pkt, sizeof(pkt));
 }
 
-void JewelBank_ResetCharacter(void)
+extern "C" void __cdecl JewelBank_ResetCharacter(void)
 {
     g_bJewelBankWindowOpen = false;
     s_JewelBankBless = 0;
@@ -137,12 +136,12 @@ void JewelBank_ResetCharacter(void)
     s_JewelBankStatus[0] = '\0';
 }
 
-void JewelBank_ResetSession(void)
+extern "C" void __cdecl JewelBank_ResetSession(void)
 {
     JewelBank_ResetCharacter();
 }
 
-void JewelBank_Recv(BYTE* Msg, int Size)
+extern "C" void __cdecl JewelBank_Recv(BYTE* Msg, int Size)
 {
     if (Size < 4) return;
     BYTE subh = Msg[3];
@@ -155,9 +154,10 @@ void JewelBank_Recv(BYTE* Msg, int Size)
             s_JewelBankChaos = *(DWORD*)(Msg + 12);
             s_JewelBankLife  = *(DWORD*)(Msg + 16);
             g_bJewelBankWindowOpen = true;
-            InventoryOpened = 1;
-            Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Bienvenido al Banco de Joyas", Platform::TruncateText);
-            s_StatusColor = Color4b(200, 230, 255, 255);
+            InventoryOpened = 0; // CRITICAL: Keep inventory window closed so no equipment overlaps
+            CloseInventoryRelatedWindows();
+            Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Banco de Joyas sincronizado", Platform::TruncateText);
+            s_StatusColor = (DWORD)Color4b(180, 230, 255, 255);
         }
     }
     else if (subh == 0x22) // Result update
@@ -174,110 +174,127 @@ void JewelBank_Recv(BYTE* Msg, int Size)
 
             if (result == 0) {
                 if (action == 1) {
-                    Platform::TextFormatSecure(s_JewelBankStatus, "Depositadas %u joya(s).", count);
+                    Platform::TextFormatSecure(s_JewelBankStatus, "Depositadas +%u joya(s) con exito", count);
                 } else {
-                    Platform::TextFormatSecure(s_JewelBankStatus, "Retiradas %u joya(s).", count);
+                    Platform::TextFormatSecure(s_JewelBankStatus, "Retiradas +%u joya(s) al inventario", count);
                 }
-                s_StatusColor = Color4b(120, 255, 120, 255);
+                s_StatusColor = (DWORD)Color4b(100, 255, 120, 255);
             } else if (result == 1) {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Saldo insuficiente en el banco.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 100, 100, 255);
+                s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
             } else if (result == 2) {
-                Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Sin espacio libre en inventario.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 160, 50, 255);
+                Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Inventario lleno: sin espacio libre.", Platform::TruncateText);
+                s_StatusColor = (DWORD)Color4b(255, 170, 50, 255);
             } else if (result == 4) {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Operacion en curso... espera.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 255, 100, 255);
+                s_StatusColor = (DWORD)Color4b(255, 255, 100, 255);
             } else {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "No tienes esa joya en inventario.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 100, 100, 255);
+                s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
             }
         }
     }
 }
 
-void RenderJewelBankWindow(void)
+extern "C" void __cdecl RenderJewelBankWindow(void)
 {
     if (!g_bJewelBankWindowOpen) return;
 
     EnableAlphaTest(true);
     glColor3f(1.0f, 1.0f, 1.0f);
+
+    // Panel skeleton frame (x = 450, y = 0, width = 190, height = 433)
     RenderInventoryInterface(kStartX, kStartY, 0);
 
-    // Title Header
+    // Dark backing for list zone (covers any background artifacts cleanly)
+    GL_ResetState();
+    glColor4f(0.08f, 0.08f, 0.10f, 0.88f);
+    GL_DrawTexture(240, (float)kStartX + 10, (float)kStartY + 40, 170.0f, 250.0f, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    EnableAlphaTest(true);
+
+    // 1. Title Header (Matching reference image: bright green/gold title)
     gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
     m_dwBackColor = Color4b(20, 20, 20, 255);
-    m_dwTextColor = Color4b(255, 215, 0, 255);
+    m_dwTextColor = (DWORD)Color4b(60, 240, 100, 255);
     int y = kStartY + 12;
-    RenderText(kStartX + 20, CenterTextPosY("BANCO DE JOYAS", y), (char*)"BANCO DE JOYAS", RealWidth(150), 1, nullptr);
+    RenderText(kStartX + 20, CenterTextPosY("Banco de Joyas", y), (char*)"Banco de Joyas", RealWidth(150), 1, nullptr);
 
-    y += 11;
+    // Subtitle
+    y = kStartY + 28;
     m_dwBackColor = Color4b(255, 255, 255, 0);
-    m_dwTextColor = Color4b(170, 210, 255, 255);
-    gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
-    RenderText(kStartX + 15, CenterTextPosY("Saldo Compartido por Cuenta", y), (char*)"Saldo Compartido por Cuenta", RealWidth(160), 1, nullptr);
+    m_dwTextColor = (DWORD)Color4b(255, 215, 0, 255);
+    gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
+    RenderText(kStartX + 15, CenterTextPosY("Deposito y Retiro", y), (char*)"Deposito y Retiro", RealWidth(160), 1, nullptr);
 
-    // Jewel Definitions
+    // 4 Jewels in the order of reference image 4:
+    // Chaos, Bless, Soul, Life
     static const struct {
+        BYTE type;
         const char* name;
         int itemIndex;
         DWORD* pBalance;
-        DWORD textColor;
+        DWORD gemColor;
     } jewels[4] = {
-        { "Jewel of Bless", 461, &s_JewelBankBless, (DWORD)Color4b(255, 240, 120, 255) },
-        { "Jewel of Soul",  462, &s_JewelBankSoul,  (DWORD)Color4b(160, 200, 255, 255) },
-        { "Jewel of Chaos", 399, &s_JewelBankChaos, (DWORD)Color4b(255, 160, 120, 255) },
-        { "Jewel of Life",  464, &s_JewelBankLife,  (DWORD)Color4b(255, 120, 180, 255) },
+        { 2, "Jewel of Chaos", 399, &s_JewelBankChaos, (DWORD)Color4b(255, 160, 50, 255) },
+        { 0, "Jewel of Bless", 461, &s_JewelBankBless, (DWORD)Color4b(255, 240, 100, 255) },
+        { 1, "Jewel of Soul",  462, &s_JewelBankSoul,  (DWORD)Color4b(120, 210, 255, 255) },
+        { 3, "Jewel of Life",  464, &s_JewelBankLife,  (DWORD)Color4b(255, 110, 180, 255) },
     };
 
-    y = kStartY + 45;
+    y = kStartY + 48;
     for (int i = 0; i < 4; ++i)
     {
         int invCount = GetItemCount(jewels[i].itemIndex, -1);
+        DWORD bankBal = *jewels[i].pBalance;
 
-        // Header for jewel
+        // Gem Diamond Icon
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
-        m_dwBackColor = Color4b(255, 255, 255, 0);
-        m_dwTextColor = jewels[i].textColor;
-        RenderText(kStartX + 16, y, (char*)jewels[i].name, RealWidth(160), 0, nullptr);
+        m_dwTextColor = jewels[i].gemColor;
+        RenderText(kStartX + 14, y + 2, (char*)"*", RealWidth(14), 0, nullptr);
 
-        // Balances
+        // Jewel Name
+        m_dwTextColor = (DWORD)Color4b(235, 235, 235, 255);
+        RenderText(kStartX + 26, y + 2, (char*)jewels[i].name, RealWidth(150), 0, nullptr);
+
+        // Balance Counters: "Banco: %u  |  Inv: %d"
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
         char buf[64];
-        Platform::TextFormatSecure(buf, "Banco: %u  |  Inv: %d", *jewels[i].pBalance, invCount);
-        m_dwTextColor = Color4b(220, 220, 220, 255);
-        RenderText(kStartX + 16, y + 14, buf, RealWidth(160), 0, nullptr);
+        Platform::TextFormatSecure(buf, "Banco: %u  |  Inv: %d", bankBal, invCount);
+        m_dwTextColor = (DWORD)Color4b(190, 205, 220, 255);
+        RenderText(kStartX + 20, y + 15, buf, RealWidth(150), 0, nullptr);
 
-        // Action Buttons: [-1] [-10] [+1] [+Todo]
-        float bx = (float)(kStartX + 14);
-        float by = (float)(y + 29);
-        RenderButton(bx,       by, 34, 17, "-1", *jewels[i].pBalance >= 1);
-        RenderButton(bx + 38,  by, 40, 17, "-10", *jewels[i].pBalance >= 10);
-        RenderButton(bx + 82,  by, 34, 17, "+1", invCount >= 1);
-        RenderButton(bx + 120, by, 44, 17, "+Todo", invCount >= 1);
+        // Action Buttons:
+        // [-1] Retirar 1 | [-10] | [+1] Depositar 1 | [+Todo] Depositar todo
+        float by = (float)(y + 28);
+        RenderButton((float)(kStartX + 16), by, 32, 16, "-1", bankBal >= 1);
+        RenderButton((float)(kStartX + 52), by, 36, 16, "-10", bankBal >= 10);
+        RenderButton((float)(kStartX + 92), by, 32, 16, "+1", invCount >= 1);
+        RenderButton((float)(kStartX + 128), by, 46, 16, "+Todo", invCount >= 1);
 
         y += 56;
     }
 
-    // Status Message Box
+    // Status Message Box (Just above bottom buttons)
+    int sy = kStartY + 276;
+    GL_ResetState();
+    glColor3f(0.12f, 0.12f, 0.15f);
+    GL_DrawTexture(240, (float)kStartX + 12, (float)sy, 166.0f, 26.0f, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    EnableAlphaTest(true);
+
     if (s_JewelBankStatus[0] != '\0') {
-        int sy = kStartY + 278;
-        GL_DrawTexture(240, (float)kStartX + 14, (float)sy, 162, 38, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
-        EnableAlphaTest(true);
         m_dwBackColor = Color4b(255, 255, 255, 0);
         m_dwTextColor = s_StatusColor;
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
-        RenderText(kStartX + 18, sy + 6, s_JewelBankStatus, RealWidth(154), 1, nullptr);
+        RenderText(kStartX + 16, sy + 7, s_JewelBankStatus, RealWidth(158), 1, nullptr);
     }
 
-    // Instructions note
-    int iy = kStartY + 325;
-    m_dwBackColor = Color4b(255, 255, 255, 0);
-    m_dwTextColor = Color4b(160, 160, 160, 255);
-    gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_NORMAL));
-    RenderText(kStartX + 16, iy, (char*)"[-] Retirar joyas al inventario", RealWidth(160), 0, nullptr);
-    RenderText(kStartX + 16, iy + 13, (char*)"[+] Depositar joyas al banco", RealWidth(160), 0, nullptr);
-    RenderText(kStartX + 16, iy + 26, (char*)"Disponible para todos tus PJs", RealWidth(160), 0, nullptr);
+    // Bottom Action Button 1: "¡Depositar todas!" (Like Image 4 red arrow)
+    RenderButton((float)(kStartX + 22), (float)(kStartY + 312), 146, 26, "Depositar Todo", true);
+
+    // Bottom Action Button 2: "Cerrar Banco" (Like Image 4)
+    RenderButton((float)(kStartX + 22), (float)(kStartY + 346), 146, 24, "Cerrar Banco", true);
 
     // Close button [X] at bottom left
     const int cx = kStartX + 25, cy = kStartY + 395;
@@ -290,7 +307,7 @@ void RenderJewelBankWindow(void)
     }
 }
 
-void CheckJewelBankWindow(void)
+extern "C" void __cdecl CheckJewelBankWindow(void)
 {
     if (!g_bJewelBankWindowOpen) return;
 
@@ -298,66 +315,98 @@ void CheckJewelBankWindow(void)
         UIState::CaptureMouseForUI();
     }
 
-    static const int jewelItems[4] = { 461, 462, 399, 464 };
-    static const DWORD* jewelBalances[4] = { &s_JewelBankBless, &s_JewelBankSoul, &s_JewelBankChaos, &s_JewelBankLife };
+    static const struct {
+        BYTE type;
+        int itemIndex;
+        DWORD* pBalance;
+    } jewels[4] = {
+        { 2, 399, &s_JewelBankChaos },
+        { 0, 461, &s_JewelBankBless },
+        { 1, 462, &s_JewelBankSoul  },
+        { 3, 464, &s_JewelBankLife  },
+    };
 
-    int y = kStartY + 45;
+    int y = kStartY + 48;
     for (BYTE i = 0; i < 4; ++i)
     {
-        int invCount = GetItemCount(jewelItems[i], -1);
-        DWORD bal = *jewelBalances[i];
+        int invCount = GetItemCount(jewels[i].itemIndex, -1);
+        DWORD bal = *jewels[i].pBalance;
+        BYTE jType = jewels[i].type;
 
-        float bx = (float)(kStartX + 14);
-        float by = (float)(y + 29);
+        float by = (float)(y + 28);
 
-        // [-1]
-        if (IsWorkZone((int)bx, (int)by, 34, 17) && ConsumeClick()) {
+        // [-1] Withdraw 1
+        if (IsWorkZone(kStartX + 16, (int)by, 32, 16) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (bal >= 1) {
-                SendJewelBankAction(2, i, 1);
+                SendJewelBankAction(2, jType, 1);
             } else {
-                Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Saldo insuficiente.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 100, 100, 255);
+                Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Saldo insuficiente en el banco.", Platform::TruncateText);
+                s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
             }
         }
 
-        // [-10]
-        if (IsWorkZone((int)(bx + 38), (int)by, 40, 17) && ConsumeClick()) {
+        // [-10] Withdraw 10
+        if (IsWorkZone(kStartX + 52, (int)by, 36, 16) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (bal >= 10) {
-                SendJewelBankAction(2, i, 10);
+                SendJewelBankAction(2, jType, 10);
             } else {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Se requieren al menos 10 joyas.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 100, 100, 255);
+                s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
             }
         }
 
-        // [+1]
-        if (IsWorkZone((int)(bx + 82), (int)by, 34, 17) && ConsumeClick()) {
+        // [+1] Deposit 1
+        if (IsWorkZone(kStartX + 92, (int)by, 32, 16) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (invCount >= 1) {
-                SendJewelBankAction(1, i, 1);
+                SendJewelBankAction(1, jType, 1);
             } else {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "No tienes esa joya en inventario.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 100, 100, 255);
+                s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
             }
         }
 
-        // [+Todo]
-        if (IsWorkZone((int)(bx + 120), (int)by, 44, 17) && ConsumeClick()) {
+        // [+Todo] Deposit All of this jewel
+        if (IsWorkZone(kStartX + 128, (int)by, 46, 16) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (invCount >= 1) {
-                SendJewelBankAction(1, i, 0xFFFFFFFF);
+                SendJewelBankAction(1, jType, 0xFFFFFFFF);
             } else {
                 Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "No tienes esa joya en inventario.", Platform::TruncateText);
-                s_StatusColor = Color4b(255, 100, 100, 255);
+                s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
             }
         }
 
         y += 56;
     }
 
-    // Close button [X]
+    // Bottom Action Button 1: "Depositar Todo"
+    if (IsWorkZone(kStartX + 22, kStartY + 312, 146, 26) && ConsumeClick()) {
+        PlayBuffer(25, 0, 0);
+        bool depositedAny = false;
+        for (int i = 0; i < 4; ++i) {
+            int count = GetItemCount(jewels[i].itemIndex, -1);
+            if (count > 0) {
+                SendJewelBankAction(1, jewels[i].type, 0xFFFFFFFF);
+                depositedAny = true;
+                break;
+            }
+        }
+        if (!depositedAny) {
+            Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "No tienes joyas para depositar.", Platform::TruncateText);
+            s_StatusColor = (DWORD)Color4b(255, 90, 90, 255);
+        }
+    }
+
+    // Bottom Action Button 2: "Cerrar Banco"
+    if (IsWorkZone(kStartX + 22, kStartY + 346, 146, 24) && ConsumeClick()) {
+        PlayBuffer(25, 0, 0);
+        JewelBank_Close();
+    }
+
+    // Close button [X] at bottom left
     const int cx = kStartX + 25, cy = kStartY + 395;
     if (IsWorkZone(cx, cy, 24, 24) && ConsumeClick()) {
         PlayBuffer(25, 0, 0);

@@ -20,6 +20,7 @@
 // =============================================================================
 
 #include "stdafx.h"
+#include "UI/JewelBank.h"
 #include "Platform/Text.h"
 #include "Platform/GuardedOperation.h"
 #include "Item/ContentCatalog.h"
@@ -105,7 +106,7 @@ static bool HUD_IsAnyRightPanelOpen(void)
            HUD_IsGoldenArcherPanelRuntime() ||
            HUD_IsQuestPanelOpenRuntime() ||
            (ServerDivisionOpened != '\0') ||
-           gEventTimer.IsOpen();   // DESVIACION: panel H (UI/EventTimer.cpp)
+           gEventTimer.IsOpen() || g_bJewelBankWindowOpen;   // DESVIACION: panel H (UI/EventTimer.cpp)
 }
 
 // ── Helper PORTS ─────────────────────────────────────────────────────────────

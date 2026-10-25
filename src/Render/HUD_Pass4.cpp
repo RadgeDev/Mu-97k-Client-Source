@@ -19,6 +19,7 @@
 // =============================================================================
 
 #include "stdafx.h"
+#include "UI/JewelBank.h"
 #include "Config/UserSettings.h"
 #include "Platform/Text.h"
 #include "Platform/ITimer.h"
@@ -390,7 +391,7 @@ void Render_QuickButtons_(void)
     if (HUD_IsCharacterInfoRuntime())  RenderCharacterInfoWindow(panelStartX, 0);
     // DESVIACION: panel H de horarios en la misma columna (se alterna con los anteriores).
     gEventTimer.RenderPanel();
-    RenderInventoryWindow();
+    if (!g_bJewelBankWindowOpen) RenderInventoryWindow();
     RenderTrade();
     RenderShopInterface();
     RenderChaosMix();

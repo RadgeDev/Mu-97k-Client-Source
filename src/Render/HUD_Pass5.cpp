@@ -30,6 +30,7 @@
 // =============================================================================
 
 #include "stdafx.h"
+#include "UI/JewelBank.h"
 #include "Platform/Text.h"
 #include "Game/HeroVitals.h"
 #include "globals.h"
@@ -73,7 +74,7 @@ static bool HUD_IsInventoryFamilyActive(void)
            WarehouseOpened || ChaosMixOpened || TradeOpened ||
            EventWindowOpened || GuildCreatorOpened ||
            HUD_IsGoldenArcherPanelRuntime() || (ServerDivisionOpened != 0) ||
-           HUD_IsQuestPanelOpenRuntime();
+           HUD_IsQuestPanelOpenRuntime() || g_bJewelBankWindowOpen;
 }
 
 static bool HUD_IsGuildFamilyActive(void)

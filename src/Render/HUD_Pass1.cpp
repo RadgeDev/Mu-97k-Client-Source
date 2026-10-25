@@ -19,6 +19,7 @@
 // =============================================================================
 
 #include "stdafx.h"
+#include "UI/JewelBank.h"
 #include "Platform/Text.h"
 #include "UI/MiniMap.h"
 #include "globals.h"
@@ -452,7 +453,7 @@ void Render_HotbarItems3D_(void)
     // con a3 = 1 desde sub_403320) pero nunca su modelo.
     if (g_csQuest) FUN_00403150((void*)(uintptr_t)g_csQuest, 0, 1, 0);
 
-    if (!HUD_IsGoldenArcherPanelRuntime()) {
+    if (!HUD_IsGoldenArcherPanelRuntime() && !g_bJewelBankWindowOpen) {
         FUN_004f5ce0(0, 0, 0, 0);
         if (DAT_07e91388 > 0 && !DAT_07eaa13c) {
             FUN_004f6420(0, 0, 0, 0);
