@@ -1,8 +1,10 @@
+
 // Recv_Event.cpp — paquetes del server: eventos: Devil Square, Blood Castle y Golden Archer.
 //
 // Ver Net/Recv/NetRecv.h.
 
 #include "stdafx.h"
+#include "UI/JewelBank.h"
 #include "Net/Recv/NetRecv.h"
 
 // ── 0x8E-0x99 — EVENTOS, no guild ─────────────────────────────
@@ -228,4 +230,11 @@ void NetRecv_0B(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted)
     }
     for (int i = 0; i < 40; ++i)
         g_WeatherSlotPool[i * 0x1bc] = 0;
+}
+
+// 0xF8 - Jewel Bank
+extern "C" void JewelBank_Recv(BYTE* Msg, int Size);
+void NetRecv_F8(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted)
+{
+    JewelBank_Recv(Msg, Size);
 }

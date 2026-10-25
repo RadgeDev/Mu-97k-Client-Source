@@ -17,6 +17,7 @@
 #include "UI/MoveList.h"
 #include "UI/EventTimer.h"
 #include "UI/GoldenArcher.h"
+#include "UI/JewelBank.h"
 #include "Item/ChaosMixRates.h"
 #include "Item/Item_ServerValue.h"
 
@@ -32,6 +33,7 @@ void CNetwork::ResetCharacterData()
     gHealthBar.Clear();
     gChaosMixRates.Reset();
     GoldenArcher_ResetCharacter();
+    JewelBank_ResetCharacter();
     // DSProtocol::DGCharacterInfoRecv reenvía M y las tablas para el personaje.
     gMoveList.Clear();
     ItemServerValue_ResetSession();
@@ -47,6 +49,7 @@ void CNetwork::ResetSessionData()
     gPing.Reset();
     gEventTimer.Clear();
     GoldenArcher_ResetSession();
+    JewelBank_ResetSession();
 }
 
 // Clave del chain-XOR. Es la misma que arma el binario antes de cada envío

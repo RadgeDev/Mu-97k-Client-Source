@@ -267,6 +267,7 @@ void NetRecv_99(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted);
 void NetRecv_9A(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted);
 void NetRecv_9B(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted);
 void NetRecv_0B(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted);
+void NetRecv_F8(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted);
 // Recv_Quest.cpp
 void NetRecv_A0(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted);
 void NetRecv_A1(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted);

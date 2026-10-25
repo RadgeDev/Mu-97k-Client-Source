@@ -17,6 +17,7 @@
 #include "UI/MoveList.h"
 #include "UI/EventTimer.h"
 #include "UI/GoldenArcher.h"
+#include "UI/JewelBank.h"
 #include "Item/ChaosMixRates.h"
 #include "Item/ItemDefines.h"
 #include "globals.h"
@@ -289,6 +290,7 @@ void __cdecl ClearCharacters(int param_1) {
     gEventTimer.Close();
     gChaosMixRates.Reset();
     GoldenArcher_ResetCharacter();
+    JewelBank_ResetCharacter();
     char* butterflesEnd = DAT_083a1218 + 0x1158;
     for (int i = 0; i < 0x59740; i += 0x394) {
         char* puVar1 = (char*)(i + DAT_07abf5d0);

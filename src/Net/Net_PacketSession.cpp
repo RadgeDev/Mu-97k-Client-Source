@@ -8,6 +8,7 @@
 #include "UI/MiniMap.h"
 #include "UI/EventTimer.h"
 #include "UI/MoveList.h"
+#include "UI/JewelBank.h"
 
 
 // IDA: ClearInventory (0x004CBDF0).  El nombre viejo del port
@@ -100,6 +101,7 @@ void UpdateWindowsMouse(void)
   if (DAT_07eaa164 == '\0') {
     Inventory_DropDispatch(uVar1,uVar2);
   }
+    CheckJewelBankWindow();
   CheckGoldenArcherWindow();
   ServerTransfer_HitTest();
   return;

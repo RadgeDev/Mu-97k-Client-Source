@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -160,6 +160,7 @@
     <ClInclude Include="src\Item\ItemDefines.h" />
     <ClInclude Include="src\Item\Item_ServerValue.h" />
     <ClInclude Include="src\UI\GoldenArcher.h" />
+    <ClInclude Include="src\UI\JewelBank.h" />
     <ClInclude Include="src\Core\Window.h" />
     <ClInclude Include="src\Platform\CompilerCompat.h" />
     <ClInclude Include="src\Platform\NativeBridge.h" />
@@ -543,6 +544,7 @@
     <ClCompile Include="src\UI\UI_Tooltip.cpp" />
     <ClCompile Include="src\UI\Chat_Gestures.cpp" />
     <ClCompile Include="src\UI\GoldenArcher.cpp" />
+    <ClCompile Include="src\UI\JewelBank.cpp" />
     <ClCompile Include="src\UI\EventTimer.cpp" />
     <ClCompile Include="src\UI\MiniMap.cpp" />
     <ClCompile Include="src\Render\Camera3D.cpp" />

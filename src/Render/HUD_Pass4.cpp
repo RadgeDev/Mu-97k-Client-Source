@@ -153,6 +153,7 @@ extern "C" {
     void __cdecl RenderWarehouse(void);
     void __cdecl RenderEventWindow(void);
     void __cdecl RenderGoldenArcherWindow(void);
+void __cdecl RenderJewelBankWindow(void);
     void __cdecl RenderServerDivision(void);
     // Modos de blend que usa la cola de RenderTipText (sub_47F7F0) para dejar
     // el estado GL como estaba.  Los tres eran cuerpos VACIOS con el comentario
@@ -396,6 +397,7 @@ void Render_QuickButtons_(void)
     RenderWarehouse();
     RenderEventWindow();
     RenderGoldenArcherWindow();
+    RenderJewelBankWindow();
 
     // Render del panel de quest.  IDA sub_4F5820 L38:
     // `sub_403F30((_BYTE *)g_csQuest);` entre RenderGoldenArcherWindow y

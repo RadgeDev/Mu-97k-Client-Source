@@ -793,6 +793,7 @@ void Net_ProcessPacket(void)
             case 0xF1: NetRecv_F1(Msg, Size, hdr, sub, bEncrypted); break;
             case 0xF3: NetRecv_F3(Msg, Size, hdr, sub, bEncrypted); break;
             case 0xF4: NetRecv_F4(Msg, Size, hdr, sub, bEncrypted); break;
+            case 0xF8: NetRecv_F8(Msg, Size, hdr, sub, bEncrypted); break;
             case 0x0E: NetRecv_0E(Msg, Size, hdr, sub, bEncrypted); break;
             case 0x01: NetRecv_01(Msg, Size, hdr, sub, bEncrypted); break;
             case 0x02: NetRecv_02(Msg, Size, hdr, sub, bEncrypted); break;
