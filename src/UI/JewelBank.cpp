@@ -24,6 +24,9 @@ static DWORD s_JewelBankLife  = 0;
 static char s_JewelBankStatus[64] = { 0 };
 static DWORD s_StatusColor = 0;
 
+#define JB_WindowWidth       ((int)gWindow.GetWidth())
+#define JB_WindowHeight      ((int)gWindow.GetHeight())
+
 #define JB_MouseX            ((int)DAT_083a427c)
 #define JB_MouseY            ((int)DAT_083a4278)
 #define JB_MouseLButtonPush  DAT_083a4124
@@ -37,7 +40,7 @@ static const int kStartY = 0;
 
 static int RealWidth(int w)
 {
-    int winW = *(int*)0x005E26E4;
+    int winW = JB_WindowWidth;
     return w * (winW ? winW : 640) / 640;
 }
 
@@ -50,8 +53,8 @@ static int CenterTextPosY(const char* text, int y)
 {
     SIZE sz = { 0, 0 };
     gFont.MeasureText(gFont.GetTextDC(), text, Platform::TextLength(text), &sz);
-    int winH = *(int*)0x005E26E8;
-    return y - ((480 * sz.cy / (winH ? winH : 480)) >> 1);
+    int winH = JB_WindowHeight ? JB_WindowHeight : 480;
+    return y - ((480 * sz.cy / winH) >> 1);
 }
 
 static bool ConsumeClick(void)
@@ -154,9 +157,9 @@ extern "C" void __cdecl JewelBank_Recv(BYTE* Msg, int Size)
             s_JewelBankChaos = *(DWORD*)(Msg + 12);
             s_JewelBankLife  = *(DWORD*)(Msg + 16);
             g_bJewelBankWindowOpen = true;
-            InventoryOpened = 0; // CRITICAL: Keep inventory window closed so no equipment overlaps
+            InventoryOpened = 0;
             CloseInventoryRelatedWindows();
-            Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Banco de Joyas sincronizado", Platform::TruncateText);
+            Platform::TextCopySecure(s_JewelBankStatus, sizeof(s_JewelBankStatus), "Banco de Joyas conectado", Platform::TruncateText);
             s_StatusColor = (DWORD)Color4b(180, 230, 255, 255);
         }
     }
@@ -206,14 +209,14 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
     // Panel skeleton frame (x = 450, y = 0, width = 190, height = 433)
     RenderInventoryInterface(kStartX, kStartY, 0);
 
-    // Dark backing for list zone (covers any background artifacts cleanly)
+    // Dark backing for list zone
     GL_ResetState();
-    glColor4f(0.08f, 0.08f, 0.10f, 0.88f);
+    glColor4f(0.08f, 0.08f, 0.10f, 0.90f);
     GL_DrawTexture(240, (float)kStartX + 10, (float)kStartY + 40, 170.0f, 250.0f, 0.0f, 0.0f, 213.0f / 256.0f, 1.0f, 1, 1);
     glColor3f(1.0f, 1.0f, 1.0f);
     EnableAlphaTest(true);
 
-    // 1. Title Header (Matching reference image: bright green/gold title)
+    // 1. Title Header
     gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
     m_dwBackColor = Color4b(20, 20, 20, 255);
     m_dwTextColor = (DWORD)Color4b(60, 240, 100, 255);
@@ -227,8 +230,7 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
     gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
     RenderText(kStartX + 15, CenterTextPosY("Deposito y Retiro", y), (char*)"Deposito y Retiro", RealWidth(160), 1, nullptr);
 
-    // 4 Jewels in the order of reference image 4:
-    // Chaos, Bless, Soul, Life
+    // 4 Jewels in the order of reference image: Chaos, Bless, Soul, Life
     static const struct {
         BYTE type;
         const char* name;
@@ -248,7 +250,7 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
         int invCount = GetItemCount(jewels[i].itemIndex, -1);
         DWORD bankBal = *jewels[i].pBalance;
 
-        // Gem Diamond Icon
+        // Gem bullet
         gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
         m_dwTextColor = jewels[i].gemColor;
         RenderText(kStartX + 14, y + 2, (char*)"*", RealWidth(14), 0, nullptr);
@@ -275,7 +277,7 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
         y += 56;
     }
 
-    // Status Message Box (Just above bottom buttons)
+    // Status Message Box
     int sy = kStartY + 276;
     GL_ResetState();
     glColor3f(0.12f, 0.12f, 0.15f);
@@ -293,7 +295,7 @@ extern "C" void __cdecl RenderJewelBankWindow(void)
     // Bottom Action Button 1: "¡Depositar todas!" (Like Image 4 red arrow)
     RenderButton((float)(kStartX + 22), (float)(kStartY + 312), 146, 26, "Depositar Todo", true);
 
-    // Bottom Action Button 2: "Cerrar Banco" (Like Image 4)
+    // Bottom Action Button 2: "Cerrar Banco"
     RenderButton((float)(kStartX + 22), (float)(kStartY + 346), 146, 24, "Cerrar Banco", true);
 
     // Close button [X] at bottom left
