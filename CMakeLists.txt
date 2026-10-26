@@ -354,6 +354,7 @@ set(MU_SOURCES
     src/UI/UI_SkillHotkeys.cpp
     src/UI/UI_GuildMark.cpp
     src/UI/RenderItemInfo.cpp
+    src/UI/JewelBank.cpp
     src/Scene/Scene_Objects.cpp
     src/Scene/Scene_ObjectInteraction.cpp
     src/Scene/Scene_ObjectUpdate.cpp
@@ -435,6 +436,7 @@ set(MU_HEADERS
     src/Render/Camera3D.h
     src/UI/OptionsMenu.h
     src/UI/MoveList.h
+    src/UI/JewelBank.h
     src/Sound/SoundManager.h
     src/Game/MapManager.h
     src/Game/HeroVitals.h

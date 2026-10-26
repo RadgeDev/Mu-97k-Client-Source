@@ -103,3 +103,7 @@ Terrain_Render.obj
 # Notas de trabajo del port (Codex): utiles en local, no van al repo.
 doc-port/
 
+# Backups locales de assets y builds: nunca se versionan.
+*_BACKUP_*
+bin/Client/main_*.map
+

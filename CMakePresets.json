@@ -1,4 +1,4 @@
-{
+﻿{
   "version": 3,
   "configurePresets": [
     {
@@ -10,7 +10,7 @@
       },
       "generator": "Visual Studio 17 2022",
       "architecture": "Win32",
-      "toolset": "v143"
+      "toolset": "v143,version=14.44.35207"
     },
     {
       "name": "windows-x86-release",
@@ -21,7 +21,7 @@
       },
       "generator": "Visual Studio 17 2022",
       "architecture": "Win32",
-      "toolset": "v143"
+      "toolset": "v143,version=14.44.35207"
     },
     {
       "name": "linux-x86-debug",
@@ -55,7 +55,7 @@
         "MU_PLATFORM_BACKEND": "SDL3"
       },
       "architecture": "Win32",
-      "toolset": "v143"
+      "toolset": "v143,version=14.44.35207"
     },
     {
       "name": "windows-sdl3-x86-release",
@@ -65,7 +65,7 @@
         "MU_PLATFORM_BACKEND": "SDL3"
       },
       "architecture": "Win32",
-      "toolset": "v143"
+      "toolset": "v143,version=14.44.35207"
     }
   ],
   "buildPresets": [
