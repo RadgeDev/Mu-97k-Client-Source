@@ -786,17 +786,28 @@ static char     s_pvpAnnounceText[PVP_ANNOUNCE_SLOTS][128];
 static uint32_t s_pvpAnnounceTime[PVP_ANNOUNCE_SLOTS];  // llegada de cada slot
 static uint32_t s_pvpAnnounceLastAdd;        // sólo para descartar duplicados
 
+#include "Platform/LocalTime.h"
+
 void __cdecl PvPAnnounce_Add(const char* text)
 {
     if (!text || !text[0]) return;
 
     const uint32_t now = Platform::GetTimer().Ticks();
 
+    // Formatear texto con la hora local actual [HH:MM:SS]
+    char formattedText[160];
+    if (text[0] != '[') {
+        const auto lt = Platform::ReadLocalTime();
+        Platform::TextFormat(formattedText, "[%02d:%02d:%02d] %s", lt.wHour, lt.wMinute, lt.wSecond, text);
+    } else {
+        Platform::TextCopy(formattedText, text, sizeof(formattedText));
+    }
+
     // Evitar duplicados del mismo paquete (retransmisión / doble recv).
     // No afecta la expiración: sólo ignora el mismo texto repetido en 500 ms.
     if (s_pvpAnnounceText[0][0] &&
         now - s_pvpAnnounceLastAdd < 500u &&
-        strcmp(s_pvpAnnounceText[0], text) == 0)
+        strcmp(s_pvpAnnounceText[0], formattedText) == 0)
         return;
 
     // El más antiguo (último slot: 4.º mensaje) se desplaza fuera del overlay
@@ -819,7 +830,7 @@ void __cdecl PvPAnnounce_Add(const char* text)
         s_pvpAnnounceTime[i] = s_pvpAnnounceTime[i - 1];
     }
 
-    strncpy(s_pvpAnnounceText[0], text, sizeof(s_pvpAnnounceText[0]) - 1);
+    strncpy(s_pvpAnnounceText[0], formattedText, sizeof(s_pvpAnnounceText[0]) - 1);
     s_pvpAnnounceText[0][sizeof(s_pvpAnnounceText[0]) - 1] = '\0';
     s_pvpAnnounceTime[0] = now;
     s_pvpAnnounceLastAdd = now;
