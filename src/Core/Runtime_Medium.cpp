@@ -56,6 +56,8 @@ void __cdecl RenderInformation(void) {
     if ((g_bUseChatListBox == 1) || (SceneFlag != 5)) {
         UI_RenderChatLogOverlay(); // SystemText / chat list
     }
+    // Anuncio global de muertes PvP: overlay propio abajo a la izquierda.
+    PvPAnnounce_Render();
     UI_UpdateFpsCounter(); // RenderDebugWindow / FPS reset
     RenderHelpWindow(); // RenderHelpWindow / item info
     // DESVIACION (DLL Interface.cpp, hook 0x00525CEC): mapa (Tab) y menú M.

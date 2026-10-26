@@ -402,6 +402,11 @@ void  __cdecl UIChatLogWindow_AddText(const char* strID, const char* strText, in
 void  __cdecl Chat_TickMessageTimer(void);               // IDA: FUN_00480950
 // FUN_00480980 @ 0x00480980
 void  __cdecl UI_RenderChatLogOverlay(void);
+// Anuncio global de muertes PvP: overlay propio, fijo abajo a la izquierda.
+// Definido en UI/Chat.cpp; se alimenta desde Net/Recv/Recv_Chat.cpp (0x02 con
+// remitente de dos espacios) y se dibuja en RenderInformation().
+void  __cdecl PvPAnnounce_Add(const char* text);
+void  __cdecl PvPAnnounce_Render(void);
 void  __cdecl FloatingLabel_MeasureText(int, int, int);
 void  __cdecl RenderBoolean(int x, int y, DWORD c);   // IDA: RenderBoolean (0x00480E00)
 void  __cdecl CreateChat(char* ID, char* Text, DWORD entity, int Flag, int SetColor); // CreateChat

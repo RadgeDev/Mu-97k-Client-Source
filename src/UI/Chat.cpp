@@ -17,6 +17,7 @@
 
 #include "stdafx.h"
 #include "Platform/Text.h"
+#include "Platform/ITimer.h"
 #include "Config/UserSettings.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -741,3 +742,148 @@ void Chat_TickPresentation() {
     if (SceneFlag == 5 && !gUserSettings.GetAntilag(ANTILAG_INTERFACE))
         ChatListBox_TickPresentation();
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Historial global de muertes PvP — 4 líneas visibles, 3 minutos por mensaje
+// -----------------------------------------------------------------------------
+// El GameServer difunde cada muerte PvP por el opcode 0x02 con un remitente
+// ficticio de dos espacios ("  ").  En vez de dejarlo como una línea más del
+// chat, se guarda acá y se dibuja como historial temporal.
+//
+//   · Máximo 4 mensajes visibles a la vez.
+//   · Cada mensaje expira individualmente a los 3 minutos de SU llegada
+//     (180000 ms); no hay fundido ni desaparición en bloque.
+//   · El más reciente va arriba (slot 0) y empuja a los anteriores hacia abajo.
+//   · Al llegar el 5.º se descarta únicamente el más antiguo (slot 3).
+//   · El asesinato además se registra en el historial de chat (Recv_Chat.cpp),
+//     así que sigue consultable después de desaparecer de la pantalla.
+//
+// Fondo: se reutiliza el mismo mecanismo que los mensajes Post (mode 0) y de
+// guild (mode 5), o sea `SetBackgroundTextColor` + `UI_DrawText`
+// (CUIRenderText_RenderText pinta un quad detrás de cada tramo de texto).
+// El color va en formato 0xAABBGGRR, igual que `DAT_00559c78`.
+//
+// OJO con el orden de bytes: 0xAABBGGRR tiene el ROJO en el byte BAJO.
+// Naranja RGB(255,140,0) = 0xFF008CFF (AA=FF, BB=00, GG=8C, RR=FF).
+//
+// El fondo café anterior venía de usar alpha parcial (0xE6) con ámbar: al
+// mezclarse con el escenario oscuro el resultado se veía marrón.  Ahora el
+// alpha es 0xFF (opaco), así que el quad sale exactamente RGB(255,140,0).
+//
+// Posición: y=280..322 en layout 640x480, lado izquierdo.  El dragón inferior
+// izquierdo empieza en y=387 y las barras de vida/maná están por debajo, así
+// que este bloque no las tapa.
+// ═════════════════════════════════════════════════════════════════════════════
+#define PVP_ANNOUNCE_SLOTS      4
+#define PVP_ANNOUNCE_LIFETIME   180000u      // 3 minutos por mensaje
+#define PVP_ANNOUNCE_X_LEFT     8            // borde izquierdo (layout 640x480)
+#define PVP_ANNOUNCE_Y_TOP      280          // 1.ª línea: lado izquierdo, más abajo
+#define PVP_ANNOUNCE_LINE_H     14           // separación entre anuncios
+#define PVP_ANNOUNCE_BG_COLOR   0xFF008CFFu  // naranja OPACO RGB(255,140,0)
+#define PVP_ANNOUNCE_FG_COLOR   0xFF000000u  // letras negras (contraste)
+
+static char     s_pvpAnnounceText[PVP_ANNOUNCE_SLOTS][128];
+static uint32_t s_pvpAnnounceTime[PVP_ANNOUNCE_SLOTS];  // llegada de cada slot
+static uint32_t s_pvpAnnounceLastAdd;        // sólo para descartar duplicados
+
+void __cdecl PvPAnnounce_Add(const char* text)
+{
+    if (!text || !text[0]) return;
+
+    const uint32_t now = Platform::GetTimer().Ticks();
+
+    // Evitar duplicados del mismo paquete (retransmisión / doble recv).
+    // No afecta la expiración: sólo ignora el mismo texto repetido en 500 ms.
+    if (s_pvpAnnounceText[0][0] &&
+        now - s_pvpAnnounceLastAdd < 500u &&
+        strcmp(s_pvpAnnounceText[0], text) == 0)
+        return;
+
+    // El más antiguo (último slot: 4.º mensaje) se desplaza fuera del overlay
+    // al entrar la 5.ª muerte, y pasa DIRECTO al historial de chat (F4).
+    if (s_pvpAnnounceText[PVP_ANNOUNCE_SLOTS - 1][0]) {
+        if (DAT_055c9ff0) {
+            DWORD* obj = (DWORD*)DAT_055c9ff0;
+            void** vt  = (void**)*obj;
+            if (vt) {
+                typedef void (__fastcall *FnAddText)(DWORD*, int, const char*, const char*, int, int);
+                ((FnAddText)vt[28])(obj, 0, "", s_pvpAnnounceText[PVP_ANNOUNCE_SLOTS - 1], 1, 0);
+            }
+        }
+    }
+
+    // Desplazar todo hacia abajo; los 4 slots se mantienen en naranja en pantalla.
+    for (int i = PVP_ANNOUNCE_SLOTS - 1; i > 0; --i) {
+        memcpy(s_pvpAnnounceText[i], s_pvpAnnounceText[i - 1],
+               sizeof(s_pvpAnnounceText[i]));
+        s_pvpAnnounceTime[i] = s_pvpAnnounceTime[i - 1];
+    }
+
+    strncpy(s_pvpAnnounceText[0], text, sizeof(s_pvpAnnounceText[0]) - 1);
+    s_pvpAnnounceText[0][sizeof(s_pvpAnnounceText[0]) - 1] = '\0';
+    s_pvpAnnounceTime[0] = now;
+    s_pvpAnnounceLastAdd = now;
+}
+
+void __cdecl PvPAnnounce_Render(void)
+{
+    if (SceneFlag != 5) return;
+    if (gUserSettings.GetAntilag(ANTILAG_INTERFACE)) return;
+
+    const uint32_t now = Platform::GetTimer().Ticks();
+
+    // Si ninguno sigue vigente no hay nada que dibujar.
+    bool anyAlive = false;
+    for (int i = 0; i < PVP_ANNOUNCE_SLOTS; ++i) {
+        if (s_pvpAnnounceText[i][0] &&
+            now - s_pvpAnnounceTime[i] < PVP_ANNOUNCE_LIFETIME) {
+            anyAlive = true;
+            break;
+        }
+    }
+    if (!anyAlive) return;
+
+    HDC hdc = gFont.GetTextDC();
+    if (!hdc) return;
+
+    gFont.SelectFont(hdc, gFont.GetFont(FONT_BOLD));
+
+    // Blanco opaco: CUIRenderText_RenderText multiplica el RGB del fondo por
+    // el color actual; con blanco y alpha 1.0 el naranja sale exacto y opaco.
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+    // `line` cuenta sólo los mensajes vigentes: si uno expira, los demás se
+    // compactan hacia arriba sin dejar huecos.
+    int line = 0;
+    for (int i = 0; i < PVP_ANNOUNCE_SLOTS; ++i) {
+        if (!s_pvpAnnounceText[i][0]) continue;
+        if (now - s_pvpAnnounceTime[i] >= PVP_ANNOUNCE_LIFETIME) {
+            // Expiró por tiempo: moverlo al historial de chat F4 para no perderlo
+            if (DAT_055c9ff0) {
+                DWORD* obj = (DWORD*)DAT_055c9ff0;
+                void** vt  = (void**)*obj;
+                if (vt) {
+                    typedef void (__fastcall *FnAddText)(DWORD*, int, const char*, const char*, int, int);
+                    ((FnAddText)vt[28])(obj, 0, "", s_pvpAnnounceText[i], 1, 0);
+                }
+            }
+            s_pvpAnnounceText[i][0] = '\0';
+            continue;
+        }
+
+        const int x = PVP_ANNOUNCE_X_LEFT;
+        const int y = PVP_ANNOUNCE_Y_TOP + line * PVP_ANNOUNCE_LINE_H;
+
+        DAT_00559c78           = PVP_ANNOUNCE_FG_COLOR;
+        SetBackgroundTextColor = PVP_ANNOUNCE_BG_COLOR;
+        UI_DrawText(x, y, s_pvpAnnounceText[i], 0, 1, 0,
+                    sizeof(s_pvpAnnounceText[i]));
+
+        ++line;
+    }
+
+    // No dejar el color actual tintado para el resto del HUD.
+    SetBackgroundTextColor = 0;
+    glColor3f(1.0f, 1.0f, 1.0f);
+}
+

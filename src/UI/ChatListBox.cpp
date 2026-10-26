@@ -1224,10 +1224,12 @@ static int __fastcall ChatLB_renderLine(DWORD* self, int /*edx*/, int row)
         if (row + 1 >= (int)self[35]) return (int)g_bUseChatListBox;
     }
     if (!DAT_00559bf1 && *(DWORD*)(self[25] + 276) == 3) return 0;
-    if (g_bUseChatListBox) {
+    if (!g_bUseChatListBox) {
+        // En modo clásico (ventana F4 cerrada), ocultar los mensajes de anuncio PvP (tipo 1 y 2)
+        // para que no se dibujen flotando arriba a la izquierda. Solo se verán cuando se abra el chat con F4.
         DWORD t = *(DWORD*)(self[25] + 276);
         if (t == 1 || t == 2) return 0;
-    } else {
+
         int extra = *(int*)(self[25] + 284);
         if (extra && !self[34]) {
             if ((int)self[35] - extra - v5 - 1 < 0) return v5 - (int)self[35];
@@ -1422,10 +1424,10 @@ static int __fastcall ChatLB_lineHover(DWORD* self, int, int row)
         if (row + 1 >= (int)self[35]) return g_bUseChatListBox;
     }
     if (!DAT_00559bf1 && *(DWORD*)(self[25] + 276) == 3) return 0;
-    if (g_bUseChatListBox) {
+    if (!g_bUseChatListBox) {
         int v5 = *(int*)(self[25] + 276);
         if (v5 == 1 || v5 == 2) return 0;
-    } else {
+
         int v6 = *(int*)(self[25] + 284);
         if (v6) {
             if (!self[34]) {
@@ -1639,10 +1641,6 @@ static void __fastcall ChatLB_AddText(DWORD* self, int /*edx*/,
 static int __stdcall ChatLB_isRowVisible(int rowData)
 {
     if (!DAT_00559bf1 && *(DWORD*)(rowData + 268) == 3) return 1;
-    if (g_bUseChatListBox) {
-        int v2 = *(DWORD*)(rowData + 268);
-        if (v2 == 1 || v2 == 2) return 1;
-    }
     return 0;
 }
 

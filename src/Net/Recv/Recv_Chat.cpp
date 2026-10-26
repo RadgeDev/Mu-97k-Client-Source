@@ -55,6 +55,36 @@ void NetRecv_02(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted)
     //
     // Canal **0** (como IDA) → negro sobre fondo celeste (0x9632C8FF), el look
     // clásico de whisper.
+    //
+    // Anuncio global de muertes PvP (GameServer): viaja por este opcode con un
+    // remitente ficticio de dos espacios ("  ").  No es un susurro: se desvía
+    // al overlay temporal (PvPAnnounce_*) y NO dispara el sonido/registro de
+    // whisper.  Se intercepta ANTES del gate m_bBlockWhisper para que siga
+    // visible con los susurros bloqueados (F3).
+    //
+    // Además se guarda en el historial de chat para poder consultar quién mató
+    // a quién después de que el mensaje expire del overlay.  La etiqueta va
+    // vacía porque el texto ya incluye ambos nombres y así entra tanto en el
+    // listbox moderno como en el ring clásico (ver Chat_Log.cpp).
+    if (Size >= 14) {
+        char aname[11] = {0};
+        memcpy(aname, Msg + 3, 10);
+        // El remitente ficticio del anuncio PvP son DOS espacios.  No exigir
+        // que el byte siguiente sea '\0': algunos builds del GameServer no
+        // rellenan con ceros el campo name[10].  Ningún nombre válido de MU
+        // empieza con espacio, así que dos espacios iniciales son concluyentes.
+        if (aname[0] == ' ' && aname[1] == ' ') {
+            char amsg[128] = {0};
+            int alen = Size - 13;
+            if (alen > (int)sizeof(amsg) - 1) alen = (int)sizeof(amsg) - 1;
+            memcpy(amsg, Msg + 13, alen);
+            if (alen > 0) {
+                PvPAnnounce_Add(amsg);                 // overlay 3 minutos abajo-izquierda (hasta 4 mensajes)
+            }
+            return;
+        }
+    }
+
     if (Size >= 14 && DAT_07e11dac == 0) {   // m_bBlockWhisper (toggle F3)
         char wname[11] = {0};
         char wmsg[61]  = {0};
