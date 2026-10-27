@@ -818,7 +818,7 @@ void __cdecl PvPAnnounce_Add(const char* text)
             void** vt  = (void**)*obj;
             if (vt) {
                 typedef void (__fastcall *FnAddText)(DWORD*, int, const char*, const char*, int, int);
-                ((FnAddText)vt[28])(obj, 0, "", s_pvpAnnounceText[PVP_ANNOUNCE_SLOTS - 1], 1, 0);
+                ((FnAddText)vt[28])(obj, 0, "", s_pvpAnnounceText[PVP_ANNOUNCE_SLOTS - 1], 6, 0);
             }
         }
     }
@@ -875,7 +875,7 @@ void __cdecl PvPAnnounce_Render(void)
                 void** vt  = (void**)*obj;
                 if (vt) {
                     typedef void (__fastcall *FnAddText)(DWORD*, int, const char*, const char*, int, int);
-                    ((FnAddText)vt[28])(obj, 0, "", s_pvpAnnounceText[i], 1, 0);
+                    ((FnAddText)vt[28])(obj, 0, "", s_pvpAnnounceText[i], 6, 0);
                 }
             }
             s_pvpAnnounceText[i][0] = '\0';

@@ -1224,11 +1224,11 @@ static int __fastcall ChatLB_renderLine(DWORD* self, int /*edx*/, int row)
         if (row + 1 >= (int)self[35]) return (int)g_bUseChatListBox;
     }
     if (!DAT_00559bf1 && *(DWORD*)(self[25] + 276) == 3) return 0;
-    if (!g_bUseChatListBox) {
-        // En modo clásico (ventana F4 cerrada), ocultar los mensajes de anuncio PvP (tipo 1 y 2)
-        // para que no se dibujen flotando arriba a la izquierda. Solo se verán cuando se abra el chat con F4.
-        DWORD t = *(DWORD*)(self[25] + 276);
-        if (t == 1 || t == 2) return 0;
+    if (g_bUseChatListBox) {
+        // En modo listbox
+    } else {
+        // En modo clásico: si la línea es un anuncio PvP (tipo 6), no dibujarla aquí
+        if (*(DWORD*)(self[25] + 276) == 6) return 0;
 
         int extra = *(int*)(self[25] + 284);
         if (extra && !self[34]) {
@@ -1254,6 +1254,7 @@ static int __fastcall ChatLB_renderLine(DWORD* self, int /*edx*/, int row)
             case 3: m_dwTextColor = 0xFFEFDCCDu; m_dwBackColor = 0x96000000u; break;
             case 4: back = 0x96FFC800u; m_dwTextColor = 0xFF000000u; m_dwBackColor = back; break;
             case 5: back = 0xC896FF00u; m_dwTextColor = 0xFF000000u; m_dwBackColor = back; break;
+            case 6: back = 0xFF008CFFu; m_dwTextColor = 0xFF000000u; m_dwBackColor = back; break;
             default: back = m_dwBackColor; break;
         }
         if (g_bUseChatListBox && (back & 0xFFFFFFu) == 0) {
@@ -1283,6 +1284,7 @@ static int __fastcall ChatLB_renderLine(DWORD* self, int /*edx*/, int row)
         case 3: m_dwTextColor = 0xFFC8DCE6u; m_dwBackColor = 0x96000000u; break;
         case 4: m_dwTextColor = 0xFF000000u; m_dwBackColor = 0x96FFC800u; break;
         case 5: m_dwTextColor = 0xFF000000u; m_dwBackColor = 0xC896FF00u; break;
+        case 6: m_dwTextColor = 0xFF000000u; m_dwBackColor = 0xFF008CFFu; break;
         default: break;
     }
     if (g_bUseChatListBox && (m_dwBackColor & 0xFFFFFFu) == 0) m_dwBackColor = 0;
@@ -1424,9 +1426,10 @@ static int __fastcall ChatLB_lineHover(DWORD* self, int, int row)
         if (row + 1 >= (int)self[35]) return g_bUseChatListBox;
     }
     if (!DAT_00559bf1 && *(DWORD*)(self[25] + 276) == 3) return 0;
-    if (!g_bUseChatListBox) {
-        int v5 = *(int*)(self[25] + 276);
-        if (v5 == 1 || v5 == 2) return 0;
+    if (g_bUseChatListBox) {
+        // En modo listbox
+    } else {
+        if (*(DWORD*)(self[25] + 276) == 6) return 0;
 
         int v6 = *(int*)(self[25] + 284);
         if (v6) {
@@ -1641,6 +1644,13 @@ static void __fastcall ChatLB_AddText(DWORD* self, int /*edx*/,
 static int __stdcall ChatLB_isRowVisible(int rowData)
 {
     if (!DAT_00559bf1 && *(DWORD*)(rowData + 268) == 3) return 1;
+    if (g_bUseChatListBox) {
+        int v2 = *(DWORD*)(rowData + 268);
+        if (v2 == 1 || v2 == 2) return 1;
+    } else {
+        // En modo clásico, los anuncios PvP (tipo 6) no deben contarse como fila visible
+        if (*(DWORD*)(rowData + 268) == 6) return 1;
+    }
     return 0;
 }
 
