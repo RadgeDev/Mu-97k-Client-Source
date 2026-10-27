@@ -407,6 +407,9 @@ void  __cdecl UI_RenderChatLogOverlay(void);
 // remitente de dos espacios) y se dibuja en RenderInformation().
 void  __cdecl PvPAnnounce_Add(const char* text);
 void  __cdecl PvPAnnounce_Render(void);
+extern BYTE g_ActiveWarehouseNumber; // 0..3 (Baúl 1..4)
+void  __cdecl Warehouse_SendChange(BYTE warehouseNumber);
+void  __cdecl Warehouse_RecvChange(BYTE* Msg, int Size);
 void  __cdecl FloatingLabel_MeasureText(int, int, int);
 void  __cdecl RenderBoolean(int x, int y, DWORD c);   // IDA: RenderBoolean (0x00480E00)
 void  __cdecl CreateChat(char* ID, char* Text, DWORD entity, int Flag, int SetColor); // CreateChat

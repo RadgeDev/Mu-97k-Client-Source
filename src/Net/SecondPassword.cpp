@@ -1087,6 +1087,23 @@ void __cdecl SecondPassword_Screen8(void) {
 void __cdecl SecondPassword_Screen9(void) {
     if (DAT_07eaa119 == '\0') return;
 
+    // ── Hit-test para las 4 pestañas de Baúl (Baúl 1, 2, 3, 4) ──────────────
+    // Ubicadas en y = 28..46, ancho 40 px por pestaña, espaciado 43 px
+    for (BYTE b = 0; b < 4; ++b) {
+        int tabX = (int)DAT_07eaa0c8 + 12 + b * 43;
+        int tabY = (int)DAT_07eaa0cc + 28;
+        if ((int)DAT_083a427c >= tabX && (int)DAT_083a427c < (tabX + 40) &&
+            (int)DAT_083a4278 >= tabY && (int)DAT_083a4278 < (tabY + 18))
+        {
+            if (IsClickPushed()) {
+                DAT_083a4124 = '\0';
+                PlayBuffer(0x19, 0, 0);
+                Warehouse_SendChange(b);
+            }
+            return;
+        }
+    }
+
     static const int xOff[4] = { 0x1a, 0x4c, 0x7e, 0xd7 };
     static const int yOff[4] = { 0x186, 0x186, 0x186, 0x18b };
 

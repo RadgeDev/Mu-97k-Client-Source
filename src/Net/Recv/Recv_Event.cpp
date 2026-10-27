@@ -232,9 +232,13 @@ void NetRecv_0B(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted)
         g_WeatherSlotPool[i * 0x1bc] = 0;
 }
 
-// 0xF8 - Jewel Bank
+// 0xF8 - Jewel Bank & Warehouse Multi-Tab
 extern "C" void JewelBank_Recv(BYTE* Msg, int Size);
 void NetRecv_F8(BYTE* Msg, int Size, BYTE hdr, BYTE sub, bool bEncrypted)
 {
+    if (Size >= 4 && Msg[3] == 0x30) {
+        Warehouse_RecvChange(Msg, Size);
+        return;
+    }
     JewelBank_Recv(Msg, Size);
 }

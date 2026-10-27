@@ -1616,16 +1616,44 @@ extern "C" void __cdecl RenderChaosMix(void)
     }
 }
 
+BYTE g_ActiveWarehouseNumber = 0; // 0..3 (Baul 1..4)
+
+void __cdecl Warehouse_SendChange(BYTE warehouseNumber)
+{
+    if (warehouseNumber > 3) return;
+    if (g_ActiveWarehouseNumber == warehouseNumber) return;
+
+    // Feedback visual instantáneo para el usuario
+    g_ActiveWarehouseNumber = warehouseNumber;
+
+    // Limpiar celdas en el cliente inmediatamente mientras llega el nuevo inventario
+    if (OffsetWarehouseItems) {
+        for (int i = 0; i < 120; ++i) {
+            BYTE* c = OffsetWarehouseItems + i * 0x44;
+            *(short*)c = (short)0xFFFF;
+            *(DWORD*)(c + 0x38) = 0;
+        }
+    }
+
+    BYTE pkt[5] = { 0xC1, 0x05, 0xF8, 0x30, warehouseNumber };
+    gNetwork.SendC1(pkt, sizeof(pkt));
+}
+
+void __cdecl Warehouse_RecvChange(BYTE* Msg, int Size)
+{
+    if (Size < 5) return;
+    BYTE newWh = Msg[4];
+    if (newWh < 4) {
+        g_ActiveWarehouseNumber = newWh;
+    }
+}
+
 // RenderWarehouse — sub_4F3170 @ 0x004F3170 (2776 bytes).
 //
 // Incluye la fila inferior: el zen guardado, el impuesto de retiro y los 3
 // botones (guardar zen / sacar zen / candado). El hit-test de esos botones es
 // SecondPassword_Screen9 (Net/SecondPassword.cpp, nombre heredado: es el de
 // sub_4EB5D0).
-//
-// Ruido anti-tamper (hash table sobre CharacterMachine alrededor de CADA lectura
-// de +0x54C/+0x548 y del Level) omitido per policy — el efecto neto es la
-// lectura directa.
 extern "C" void __cdecl RenderWarehouse(void)
 {
     if (!WarehouseOpened) return;
@@ -1636,13 +1664,56 @@ extern "C" void __cdecl RenderWarehouse(void)
     dword_7EAA0CC = 0;
     RenderInventoryInterface(dword_7EAA0C8, dword_7EAA0CC, 0);
 
+    // ── 4 Pestañas Superiores: Baul 1, Baul 2, Baul 3, Baul 4 ───────────────
+    // Ancho total panel ~190 px. Cada pestaña: 40px ancho, 18px alto, espaciado 43px.
+    for (BYTE b = 0; b < 4; ++b) {
+        float tx = (float)(dword_7EAA0C8 + 12 + b * 43);
+        float ty = (float)(dword_7EAA0CC + 28);
+        bool bActive = (g_ActiveWarehouseNumber == b);
+        bool bHover  = (MouseX >= tx && MouseX < tx + 40.0f && MouseY >= ty && MouseY < ty + 18.0f);
+
+        // Fondo de pestaña (con blending de UI)
+        EnableAlphaTest(true);
+        if (bActive) {
+            glColor4f(0.85f, 0.45f, 0.05f, 0.95f);  // Naranja activo
+        } else if (bHover) {
+            glColor4f(0.25f, 0.35f, 0.45f, 0.90f);  // Hover
+        } else {
+            glColor4f(0.12f, 0.14f, 0.16f, 0.85f);  // Inactivo
+        }
+        GL_DrawRect(tx, ty, 40.0f, 18.0f);
+
+        // Borde fino
+        if (bActive) {
+            glColor4f(1.0f, 0.8f, 0.2f, 1.0f);
+        } else {
+            glColor4f(0.35f, 0.35f, 0.35f, 0.8f);
+        }
+        GL_DrawRect(tx, ty, 40.0f, 1.0f);
+        GL_DrawRect(tx, ty, 1.0f, 18.0f);
+        GL_DrawRect(tx + 39.0f, ty, 1.0f, 18.0f);
+        GL_DrawRect(tx, ty + 17.0f, 40.0f, 1.0f);
+
+        GL_ResetState();
+
+        // Texto "Baul 1..4"
+        gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
+        m_dwBackColor = 0;
+        m_dwTextColor = bActive ? 0xFFFFFFFFu : (bHover ? 0xFFE0E0E0u : 0xFF9E9E9Eu);
+        char tabName[16];
+        Platform::TextFormat(tabName, "Baul %d", b + 1);
+        RenderText((int)tx + 3, (int)ty + 3, tabName, 0, 0, 0);
+    }
+
+    // Restaurar estado limpio para texturas antes de dibujar la grilla y botones
+    EnableAlphaTest(true);
+    glColor3f(1.0f, 1.0f, 1.0f);
+
     RenderItemsBoxes((float)((double)dword_7EAA0C8 + 15.0),
                      (float)((double)dword_7EAA0CC + 50.0),
                      (DWORD)(uintptr_t)OffsetWarehouseItems, 8, 15);
 
     // ── Título: "Baúl (Abierto|Cerrado)" ─────────────────────────────────────
-    // IDA: Platform::TextFormat(String, "%s (%s)", GlobalText[234], GlobalText[240 + lock])
-    // con glColor amarillo cuando el baúl está bloqueado por password.
     glColor3f(1.0f, 1.0f, 1.0f);
     gFont.SelectFont(gFont.GetTextDC(), gFont.GetFont(FONT_BOLD));
     m_dwBackColor = 0xFF141414u;
