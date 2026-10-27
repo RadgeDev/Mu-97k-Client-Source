@@ -145,7 +145,7 @@
 240	0	"Safety Guardian"
 241	0	"Captain Lorence"
 242	0	"Elf Lala"
-243	0	"Eo the Craftsman"
+243	0	"Yoda Jewel Bank"
 244	0	"Caren the Barmaid"
 245	0	"Wizard Izabel"
 246	0	"Weapons Merchant Zienna"

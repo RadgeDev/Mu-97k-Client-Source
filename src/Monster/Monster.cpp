@@ -1095,7 +1095,7 @@ char* __cdecl CreateMonster(unsigned int Type_, int PositionX, int PositionY,
         // Type) a c+0x1c1 (449), que lee Target_Render al hacer hover sobre el NPC/mob.
         // Usa el Type ORIGINAL del packet (el blacksmith es 251), no el model type resuelto.
         {
-            char* mname = getMonsterName(Type);
+            char* mname = (Type == 243) ? (char*)"Yoda Jewel Bank" : getMonsterName(Type);
             char* dst = (char*)(uintptr_t)(c + 0x1c1);
             if (mname && mname[0]) {
                 int n = 0;
