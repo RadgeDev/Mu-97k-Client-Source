@@ -652,7 +652,7 @@ void NetLog(const char* fmt, ...)
     va_list ap; va_start(ap, fmt);
     int n = Platform::TextVFormatTruncated(buf, sizeof(buf), Platform::TruncateText, fmt, ap);
     va_end(ap);
-    if (n < 0) buf[0] = 0;
+    if (n > 0) DbgLogPublic(buf);
 }
 
 // ============================================================================

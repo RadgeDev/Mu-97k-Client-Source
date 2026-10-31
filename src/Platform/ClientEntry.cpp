@@ -561,7 +561,7 @@ int main(int, char**)
     if (!gNetwork.HasConnectServer()) {
         char* srv0 = DAT_083a45d8;                           // entry index 0
         memset(srv0, 0, 0x21e);
-        Platform::TextCopy(srv0, "MuServer", 20);                     // +0x00 name
+        Platform::TextCopy(srv0, "Oraculo Mu", 20);                     // +0x00 name
         srv0[0x14] = 1;                                      // +0x14 num_channels
         *(unsigned short*)(srv0 + 0x2c) = 1;                 // channel[0] id → "1"
         // Load byte = ocupación del server (0..100). El original lo recibe por
