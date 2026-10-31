@@ -41,6 +41,20 @@ void Win32Window::ShowAndFocus()
 }
 void Win32Window::CloseWindow() { SendMessageA(m_hWnd, WM_CLOSE, 0, 0); }
 
+void Win32Window::MinimizeWindow()
+{
+    if (!m_hWnd) return;
+    ShowWindow(m_hWnd, SW_MINIMIZE);
+}
+
+void Win32Window::RestoreWindow()
+{
+    if (!m_hWnd) return;
+    ShowWindow(m_hWnd, SW_RESTORE);
+    SetForegroundWindow(m_hWnd);
+    SetFocus(m_hWnd);
+}
+
 void Win32Window::OnFullscreenMinimize()
 {
     if (m_WindowMode) return;

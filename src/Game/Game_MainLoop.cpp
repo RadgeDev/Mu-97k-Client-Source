@@ -1,4 +1,4 @@
-// Game_MainLoop.cpp
+﻿// Game_MainLoop.cpp
 // Game_MainLoop @ 0x00525D40
 //
 // Main frame loop for SceneFlag 2/4/5 (Login/CharSelect/InGame).
@@ -45,6 +45,7 @@ void ItemNames_TickInput();
 #include "Platform/Text.h"
 #include "Platform/ITimer.h"
 #include "Platform/IInput.h"
+#include "Platform/IWindow.h"
 #include "Net/Reconnect.h"
 #include "Entity/CharacterAttributeView.h"
 #include "Net/ServerCharacterStats.h"
@@ -188,7 +189,12 @@ void __cdecl Game_MainLoop(HDC param_1)
         Chat_TickMessageTimer();   CHK("ML/post_00480950");
 
         // DESVIACION: F12 alterna el contador FPS una vez por pulsación.
-        if (PressKey(VK_F12)) ToggleFpsCounter();
+        if (PressKey(VK_F11)) {
+            Platform::GetWindow().MinimizeWindow();
+        }
+        if (PressKey(VK_F12)) {
+            Platform::GetWindow().RestoreWindow();
+        }
 
         // Print Screen conserva su captura independiente.
         if (PressKey(0x2c) & 0xff)

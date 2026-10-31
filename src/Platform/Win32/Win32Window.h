@@ -20,6 +20,8 @@ public:
     void QuitLoop() override { PostQuitMessage(0); }
     void CloseWindow() override;
     void RequestCloseApplication() override;
+    void MinimizeWindow() override;
+    void RestoreWindow() override;
     bool IsActive() const override { return m_Active && !m_Minimized; }
     bool IsMinimized() const override { return m_Minimized; }
     void SetActive(bool active) { m_Active = active; }

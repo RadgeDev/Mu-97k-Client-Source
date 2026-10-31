@@ -457,7 +457,7 @@ static void HUD_HotkeyTick(void)
     int kTab = PressKey(VK_TAB);
     int kSpace = PressKey(VK_SPACE);
     int kF10 = PressKey(VK_F10);
-    int kF11 = PressKey(VK_F11);
+    // F11 y F12 estan asignados a Minimizar y Restaurar ventana en Game_MainLoop.
 
     if (GuildInputEnable != '\0') return;  // g_ChatMode
     if (DAT_00559c84 != '\0') return;  // g_TextMode (login / dialog text)
@@ -496,7 +496,7 @@ static void HUD_HotkeyTick(void)
     if (kSpace) HUD_PickUpNearestItem();
     // DESVIACION (DLL Controller.cpp): F10 activa la cámara 3D, F11 la restaura.
     if (kF10) gCamera3D.Toggle();
-    if (kF11) gCamera3D.Restore();
+    // gCamera3D.Restore(); // F11 liberado para atajo global de minimizacion
 
     // IDA Chat_InputTick L4921-6414.  Al abrir con tecla, si la ventana del
     // NPC no se pudo cerrar (baul con EquipmentItem, Chaos con items) el panel
