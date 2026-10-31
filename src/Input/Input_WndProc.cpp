@@ -6,6 +6,7 @@
 #include "Platform/Text.h"
 #include "Render/Camera3D.h"
 #include "Input/Input.h"
+#include "Platform/IWindow.h"
 
 // Helper de src/UI/Chat_InputTick.cpp — envía una línea de chat
 // escrita en InputText[0] (DAT_07db8710 slot 0) por WM_CHAR; la llama el
@@ -60,8 +61,28 @@ static bool Chat_TryAssignMacro(const char* text)
     return true;
 }
 
+void Input_ResetAllStates()
+{
+    DAT_083a4124 = 0;      // MouseLButtonPush = 0
+    DAT_083a42c4 = 0;      // MouseLButton = 0
+    DAT_083a413c = 0;      // MouseLButtonPop = 0
+    DAT_083a4299 = 0;      // g_DblClickFlag = 0
+    DAT_083a42ac = 0;      // MouseRButton = 0
+    MouseRButtonPush = 0;  // MouseRButtonPush = 0
+    DAT_055ca038 = 0;      // Enter pressed = 0
+    if (Attacking != -1) {
+        Attacking = -1;
+    }
+    gCamera3D.EndDrag();
+    Platform::GetInput().CaptureMouse(false);
+    memset(KeyState, 0, sizeof(KeyState));
+}
+
 void Input_OnEvent(const Platform::InputEvent& event)
 {
+    if (!Platform::GetWindow().IsActive())
+        return;
+
     switch (event.type)
     {
     case Platform::InputEventType::MouseMove:     // 0x200

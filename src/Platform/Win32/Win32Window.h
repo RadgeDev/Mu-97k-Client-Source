@@ -20,8 +20,15 @@ public:
     void QuitLoop() override { PostQuitMessage(0); }
     void CloseWindow() override;
     void RequestCloseApplication() override;
+    bool IsActive() const override { return m_Active && !m_Minimized; }
+    bool IsMinimized() const override { return m_Minimized; }
+    void SetActive(bool active) { m_Active = active; }
+    void SetMinimized(bool minimized) { m_Minimized = minimized; }
+    bool IsFullscreen() const { return !m_WindowMode; }
     HWND GetHwnd() const { return m_hWnd; }
     HINSTANCE GetInstance() const { return m_hInst; }
+    void OnFullscreenMinimize();
+    void OnFullscreenRestore();
 private:
     void ApplySettings(const WindowSettings& settings);
     void ApplyFullscreen();
@@ -34,6 +41,8 @@ private:
     bool m_WindowMode = true;
     bool m_Borderless = false;
     bool m_DisplayModeChanged = false;
+    bool m_Active = true;
+    bool m_Minimized = false;
 };
 Win32Window& GetWin32Window();
 } // namespace Platform

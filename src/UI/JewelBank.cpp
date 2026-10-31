@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Platform/Text.h"
+#include "Platform/IInput.h"
 #include "UI/JewelBank.h"
 #include "UI/UIState.h"
 #include "Net/Protocol/GameServerProtocol.h"
@@ -460,7 +461,7 @@ extern "C" void __cdecl CheckJewelBankWindow(void)
         if (IsWorkZone((int)btnDepositX, (int)btnY, (int)btnW, (int)btnH) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (invCount >= 1) {
-                bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+                bool shift = (Platform::GetInput().KeyState(VK_SHIFT) & 0x8000) != 0;
                 DWORD count = shift ? 0xFFFFFFFF : 1;
                 SendJewelBankAction(1, jType, count);
             } else {
@@ -473,7 +474,7 @@ extern "C" void __cdecl CheckJewelBankWindow(void)
         if (IsWorkZone((int)btnWithdrawX, (int)btnY, (int)btnW, (int)btnH) && ConsumeClick()) {
             PlayBuffer(25, 0, 0);
             if (bal >= 1) {
-                bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+                bool shift = (Platform::GetInput().KeyState(VK_SHIFT) & 0x8000) != 0;
                 DWORD count = shift ? 10 : 1;
                 SendJewelBankAction(2, jType, count);
             } else {

@@ -28,6 +28,8 @@ public:
     virtual void QuitLoop() = 0;
     virtual void CloseWindow() = 0;
     virtual void RequestCloseApplication() = 0;
+    virtual bool IsActive() const { return true; }
+    virtual bool IsMinimized() const { return false; }
 };
 IWindow& GetWindow();
 } // namespace Platform

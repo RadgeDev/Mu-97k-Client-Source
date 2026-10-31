@@ -41,6 +41,21 @@ void Win32Window::ShowAndFocus()
 }
 void Win32Window::CloseWindow() { SendMessageA(m_hWnd, WM_CLOSE, 0, 0); }
 
+void Win32Window::OnFullscreenMinimize()
+{
+    if (m_WindowMode) return;
+    RestoreDisplay();
+}
+
+void Win32Window::OnFullscreenRestore()
+{
+    if (m_WindowMode) return;
+    ApplyFullscreen();
+    if (m_hWnd) {
+        SetWindowPos(m_hWnd, HWND_TOP, 0, 0, (int)m_Width, (int)m_Height, SWP_SHOWWINDOW | SWP_FRAMECHANGED);
+    }
+}
+
 void Win32Window::RequestCloseApplication()
 {
     // IDA: WndProc (0x004149D0): conservar el cierre síncrono de los loaders.
