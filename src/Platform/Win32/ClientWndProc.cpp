@@ -19,6 +19,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_DESTROY:
+        UnregisterHotKey(hWnd, 1001);
+
         gPing.Reset();
         gFrameLimiter.Shutdown();
         DAT_055ca018 = 1;                                   // Destroy
@@ -27,6 +29,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             Sound_ReleaseBuffer(buffer);
         OpenGL_Release();
         PostQuitMessage(0);
+        break;
+
+    case WM_HOTKEY:
+        if (wParam == 1001) {
+            Platform::GetWin32Window().RestoreWindow();
+        }
         break;
 
     case WM_CLOSE:

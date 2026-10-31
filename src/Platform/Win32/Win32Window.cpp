@@ -225,6 +225,9 @@ bool Win32Window::Create(const WindowSettings& settings)
 
     if (!m_hWnd) return false;
 
+    // Registrar atajo global F12 para restaurar la ventana incluso si esta minimizada o sin foco
+    RegisterHotKey(m_hWnd, 1001, 0, VK_F12);
+
     // El .ico trae una sola imagen de 48x48; pedir el tamaño chico del sistema
     // con LoadImage da un icono de barra de título más limpio que el escalado
     // de GDI (igual que el DLL en CWindow::ChangeWindowState).
